@@ -1,6 +1,6 @@
 {
   "name": "codex-kit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Publishable Codex plugin wrapper for Codex Kit scaffolding workflows.",
   "author": {
     "name": "Dao Minh Hiep",
