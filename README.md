@@ -1,37 +1,24 @@
 # Codex Kit
 
-Codex-native starter kit for teams that want a reusable project scaffold with:
+Codex Kit is a Codex-native starter kit for teams that want a reusable project scaffold with routing docs, a shipped skill catalog, workflow playbooks, focused subagents, MCP-ready config, and managed updates.
 
-- a project-level `AGENTS.md`
-- a large shipped skill catalog
-- workflow playbooks
-- focused subagents
-- MCP-ready config
-- shared tool packages such as `ui-ux-pro-max`
+The goal is simple: run `codex-kit init` and get a repository that already feels ready for Codex, instead of rebuilding the same operating layer in every new project.
 
-The goal is to make `codex-kit init` produce a repository that Codex can use immediately without every team having to rebuild the same routing, skills, and conventions from scratch.
+## What It Installs
 
-## What This Repo Contains
+The scaffold currently ships with:
 
-This repository has two important layers:
+- root routing docs: `AGENTS.md`, `ARCHITECTURE.md`, `AGENT_FLOW.md`
+- 40+ skills in `.agents/skills`
+- 15 workflow playbooks in `.agents/workflows`
+- 16 focused subagents in `.codex/agents`
+- shared `ui-ux-pro-max` data and scripts in `.agents/.shared`
+- project-scoped Codex config in `.codex/config.toml`
+- managed-file tracking in `.codex-kit/manifest.json`
 
-1. The CLI and scaffold source
-- `src/`, `bin/`, and `templates/project/`
-- this is what powers `codex-kit init`, `update`, and `status`
+## Install
 
-2. The plugin-facing catalog
-- `.codex-plugin/plugin.json`
-- it points at the scaffold skill catalog so the shipped plugin view and the scaffold stay aligned
-
-The source of truth for the shipped skill catalog is:
-
-- [templates/project/.agents/skills](https://github.com/daominhhiep/codex-kit/tree/main/templates/project/.agents/skills)
-
-Do not treat a separate root `skills/` directory as canonical. The scaffold is the product.
-
-## Quick Install
-
-Use `npx`:
+Run with `npx`:
 
 ```bash
 npx @daominhhiep/codex-kit init
@@ -44,13 +31,17 @@ npm install -g @daominhhiep/codex-kit
 codex-kit init
 ```
 
-Initialize into a target directory:
+Initialize into a specific directory:
 
 ```bash
 npx @daominhhiep/codex-kit init --path ./my-project
 ```
 
-## CLI Commands
+## Requirements
+
+- Node.js `>=20`
+
+## CLI
 
 ```bash
 codex-kit init
@@ -68,13 +59,14 @@ codex-kit init --quiet
 
 codex-kit update --path ./my-project
 codex-kit update --force
+codex-kit update --dry-run
 
 codex-kit status --path ./my-project
 ```
 
 ## Scaffold Layout
 
-`codex-kit init` writes a Codex-first project layout:
+`codex-kit init` writes this Codex-first project structure:
 
 ```text
 AGENTS.md
@@ -91,73 +83,77 @@ AGENT_FLOW.md
   manifest.json
 ```
 
-### Layer Responsibilities
+## Core Pieces
 
-#### `AGENTS.md`
+### `AGENTS.md`
 
-Repository-level routing contract.
+The main routing contract for the repository. It defines:
 
-It explains:
+- how to classify requests
+- which workflow should be used
+- which subagent fits each task shape
+- which skills pair well with each role
+- when to use `check` or `verify`
 
-- how to classify tasks
-- which workflow to use
-- which subagent to choose
-- which skills are good pairings for each role
+### `.agents/skills/`
 
-#### `.agents/skills/`
+Reusable knowledge modules in Codex `SKILL.md` format.
 
-Knowledge modules in Codex `SKILL.md` format.
+The shipped catalog covers areas such as:
 
-The scaffold ships a larger curated catalog that has been normalized for Codex-oriented use. This includes areas such as:
-
-- implementation quality
+- clean code and implementation quality
 - frontend and backend work
 - database design
-- testing
-- performance
-- security
+- testing and debugging
+- performance and security
 - SEO and GEO
 - mobile
-- MCP building
+- MCP-related work
 
-#### `.agents/workflows/`
+The scaffold skill catalog is the product source of truth:
 
-Process playbooks for common task shapes such as:
+- [templates/project/.agents/skills](https://github.com/daominhhiep/codex-kit/tree/main/templates/project/.agents/skills)
 
-- brainstorming
-- planning
-- creating
-- enhancing
-- debugging
-- reviewing
-- checking
-- verifying
-- testing
-- deployment
-- orchestration
-- preview and status
-- UI/UX design direction
+### `.agents/workflows/`
 
-Workflows encode process, not domain knowledge.
+Process playbooks for common task types, including:
 
-#### `.agents/.shared/`
+- brainstorm
+- plan
+- create
+- enhance
+- debug
+- review
+- check
+- verify
+- test
+- deploy
+- preview
+- status
+- orchestrate
+- ship
+- UI/UX direction
 
-Shared packages for script-and-data tooling that does not naturally belong to a single skill.
+Workflows define process, not domain knowledge.
+
+### `.agents/.shared/`
+
+Shared packages for script-and-data tooling that do not naturally belong to a single skill.
 
 The default scaffold includes:
 
 - `.agents/.shared/ui-ux-pro-max/`
 
-This package contains:
+This shared package contains:
 
-- CSV datasets for styles, colors, typography, landing patterns, UX guidance, and stack-specific recommendations
+- CSV datasets for style, color, typography, landing-page patterns, UX guidance, and stack-specific recommendations
 - Python scripts for search and design-system generation
 
-#### `.codex/agents/`
+### `.codex/agents/`
 
 Focused subagents defined as `.toml` files.
 
-The scaffold now ships an expanded set of agents, including:
+The scaffold ships with roles such as:
 
 - `planner`
 - `explorer`
@@ -176,52 +172,40 @@ The scaffold now ships an expanded set of agents, including:
 - `devops_engineer`
 - `test_writer`
 
-Each agent stays relatively small on purpose:
+Each subagent stays intentionally narrow:
 
-- role definition lives in `.toml`
-- domain knowledge lives in skills
-- process lives in workflows
-- routing lives in `AGENTS.md`
+- agent files define role
+- skills define knowledge
+- workflows define process
+- `AGENTS.md` defines routing
 
-#### `.codex/config.toml`
+### `.codex/config.toml`
 
 Project-scoped Codex configuration.
 
 The scaffold includes:
 
-- top-level `model`, `model_reasoning_summary`, `approval_policy`, `sandbox_mode`
-- `[agents]` settings
-- `[mcp_servers]` section
-- preconfigured `context7` MCP entry
+- top-level model and approval settings
+- `[agents]` configuration
+- `[mcp_servers]` configuration
+- a ready-to-use Context7 MCP entry
 
-#### `.codex-kit/manifest.json`
+### `.codex-kit/manifest.json`
 
 Managed-file manifest used by the CLI.
 
 It tracks:
 
-- file path
-- template hash
-- installed hash
-- install version
+- managed file paths
+- template hashes
+- installed hashes
+- kit version metadata
 
 This powers:
 
 - `status`
 - safe `update`
 - detection of missing or locally modified managed files
-
-## Included by Default
-
-The current scaffold includes:
-
-- root routing docs: `AGENTS.md`, `ARCHITECTURE.md`, `AGENT_FLOW.md`
-- expanded skill catalog in `.agents/skills`
-- workflow catalog in `.agents/workflows`
-- shared `ui-ux-pro-max` package in `.agents/.shared`
-- expanded subagent catalog in `.codex/agents`
-- MCP-ready project config in `.codex/config.toml`
-- managed-file tracking in `.codex-kit/manifest.json`
 
 ## MCP Support
 
@@ -242,14 +226,14 @@ You can optionally add an API key:
 http_headers = { "CONTEXT7_API_KEY" = "YOUR_API_KEY" }
 ```
 
-The config also contains commented examples for:
+The config also includes commented examples for:
 
 - additional remote HTTP MCP servers
 - local stdio MCP servers
 
 ## UI/UX Pro Max
 
-The scaffold includes a shared `ui-ux-pro-max` package instead of only a workflow stub.
+The scaffold includes a shared `ui-ux-pro-max` package, not just a workflow stub.
 
 Example commands inside a scaffolded project:
 
@@ -259,42 +243,35 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --desi
 python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "dashboard layout" --stack nextjs
 ```
 
-This is useful for:
+Useful for:
 
-- design direction work
+- design direction
 - design-system generation
-- stack-aware frontend guidance
+- stack-aware UI guidance
 - UX and visual decision support
 
-## Why The Subagents Are Intentionally Short
+## How `update` Works
 
-Long-form agent files often bundle:
+`codex-kit update` is manifest-aware.
 
-- persona
-- domain doctrine
-- anti-patterns
-- checklists
-- workflow rules
-- skill mapping
+That means:
 
-Codex Kit keeps those concerns separated:
+- missing managed files are detectable
+- locally modified managed files are skipped by default
+- `--force` overwrites managed files intentionally
+- only tracked scaffold files are refreshed
 
-- subagents define execution role
-- skills define domain knowledge
-- workflows define process
-- `AGENTS.md` defines routing and preferred skill pairings
+This is designed to make re-running the kit safe in real repositories.
 
-This reduces duplication and keeps maintenance tractable as the catalog grows.
+## Status Output
 
-## Source of Truth Rules
+`codex-kit status` reports:
 
-To avoid drift:
-
-- `templates/project/.agents/skills` is the canonical shipped skill catalog
-- `.codex-plugin/plugin.json` points at the template skill catalog
-- tests validate scaffold contents instead of assuming a separate mirrored root catalog
-
-When changing the product, update the scaffold first.
+- current installed version
+- managed file count
+- missing managed files
+- locally modified managed files
+- outdated managed files compared with the current template
 
 ## Local Development
 
@@ -310,53 +287,39 @@ Run tests:
 npm test
 ```
 
-Run the CLI locally without global install:
+Run the CLI locally:
 
 ```bash
 node ./bin/codex-kit.js init --path ./tmp-codex-kit-test
+node ./bin/codex-kit.js status --path ./tmp-codex-kit-test
+node ./bin/codex-kit.js update --path ./tmp-codex-kit-test
 ```
 
-## Testing The Scaffold
+## Smoke Test
 
-Recommended smoke test flow:
+Recommended manual validation flow:
 
 1. Initialize a temporary project.
 2. Confirm `.agents/skills`, `.agents/workflows`, `.agents/.shared`, and `.codex/agents` exist.
 3. Run the `ui-ux-pro-max` search script in the generated project.
-4. Open Codex in that project and verify:
-   - config loads
-   - skills are visible
-   - subagents can be invoked
-   - workflow docs are present
+4. Run `codex-kit status` against the generated project.
 
 Example:
 
 ```bash
 node ./bin/codex-kit.js init --path ./tmp-codex-kit-test
 python3 ./tmp-codex-kit-test/.agents/.shared/ui-ux-pro-max/scripts/search.py "saas dashboard" --domain product
+node ./bin/codex-kit.js status --path ./tmp-codex-kit-test
 ```
 
-## How `update` Behaves
+## Package Contents
 
-`codex-kit update` is manifest-aware.
-
-That means:
-
-- missing managed files are detectable
-- locally modified managed files are skipped unless `--force` is passed
-- only tracked scaffold files are considered for refresh
-
-This is intentional. The kit should be safe to re-run in real repositories.
-
-## Packaging Notes
-
-This package includes:
+The published npm package includes:
 
 - `bin/`
 - `src/`
 - `templates/`
 - `.codex-plugin/`
-- `scripts/`
 - `README.md`
 
-The scaffold itself is the important shipped artifact. The rest of the repository exists to build, test, and maintain that scaffold.
+The scaffold is the main shipped artifact. The CLI exists to install, inspect, and refresh that scaffold safely.
