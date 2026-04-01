@@ -2,6 +2,11 @@ import path from "node:path";
 import { pathExists, readText, removePath, writeText } from "./fs.js";
 import { sha256 } from "./hash.js";
 import { MANIFEST_PATH, readManifest, writeManifest } from "./manifest.js";
+import {
+  getInstalledShippedSkills,
+  getSelectedShippedSkills,
+  loadSkillTemplates
+} from "./skills.js";
 import { loadTemplateFiles } from "./templates.js";
 
 const PLUGIN_NAME = "codex-kit";
@@ -106,29 +111,6 @@ async function ensurePluginMarketplace({ targetDir, dryRun = false }) {
   }
 }
 
-function normalizeSkillSelection(skills) {
-  if (!skills || skills.length === 0) {
-    return null;
-  }
-
-  return new Set(
-    skills
-      .map((skill) => skill.trim())
-      .filter(Boolean)
-      .map((skill) => skill.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "").split("/")[0])
-  );
-}
-
-async function loadSelectedSkillTemplates({ skillsRoot, skills }) {
-  const templates = await loadTemplateFiles(skillsRoot);
-  const selectedSkills = normalizeSkillSelection(skills);
-  if (!selectedSkills) {
-    return templates;
-  }
-
-  return templates.filter((template) => selectedSkills.has(normalizePath(template.relativePath).split("/")[0]));
-}
-
 export async function installLocalSkills({
   skillsRoot,
   codexHome,
@@ -137,24 +119,29 @@ export async function installLocalSkills({
   dryRun = false
 }) {
   const targetDir = path.join(codexHome, LOCAL_SKILLS_TARGET_ROOT);
-  const templates = await loadSelectedSkillTemplates({ skillsRoot, skills });
   const written = [];
   const skipped = [];
 
-  for (const template of templates) {
-    const destination = path.join(targetDir, template.relativePath);
-    const exists = await pathExists(destination);
+  const selectedSkills = await getSelectedShippedSkills({ skillsRoot, skills });
 
-    if (exists && !force) {
-      skipped.push(normalizePath(path.join(LOCAL_SKILLS_TARGET_ROOT, template.relativePath)));
-      continue;
+  for (const skill of selectedSkills) {
+    const templates = await loadSkillTemplates(skill);
+
+    for (const template of templates) {
+      const destination = path.join(targetDir, template.relativePath);
+      const exists = await pathExists(destination);
+
+      if (exists && !force) {
+        skipped.push(normalizePath(path.join(LOCAL_SKILLS_TARGET_ROOT, template.relativePath)));
+        continue;
+      }
+
+      if (!dryRun) {
+        await writeText(destination, template.content);
+      }
+
+      written.push(normalizePath(path.join(LOCAL_SKILLS_TARGET_ROOT, template.relativePath)));
     }
-
-    if (!dryRun) {
-      await writeText(destination, template.content);
-    }
-
-    written.push(normalizePath(path.join(LOCAL_SKILLS_TARGET_ROOT, template.relativePath)));
   }
 
   return {
@@ -180,20 +167,21 @@ export async function syncLocalSkills({
 }
 
 export async function removeLocalSkills({
+  skillsRoot,
   codexHome,
   skills,
   dryRun = false
 }) {
   const targetDir = path.join(codexHome, LOCAL_SKILLS_TARGET_ROOT);
-  const selectedSkills = normalizeSkillSelection(skills);
-  const removableSkills = selectedSkills ? Array.from(selectedSkills).sort() : [];
   const removed = [];
   const skipped = [];
 
+  const removableSkills = await getSelectedShippedSkills({ skillsRoot, skills });
+
   for (const skill of removableSkills) {
-    const destination = path.join(targetDir, skill);
+    const destination = path.join(targetDir, skill.installRelativePath);
     if (!(await pathExists(destination))) {
-      skipped.push(normalizePath(path.join(LOCAL_SKILLS_TARGET_ROOT, skill)));
+      skipped.push(normalizePath(path.join(LOCAL_SKILLS_TARGET_ROOT, skill.installRelativePath)));
       continue;
     }
 
@@ -201,7 +189,7 @@ export async function removeLocalSkills({
       await removePath(destination);
     }
 
-    removed.push(normalizePath(path.join(LOCAL_SKILLS_TARGET_ROOT, skill)));
+    removed.push(normalizePath(path.join(LOCAL_SKILLS_TARGET_ROOT, skill.installRelativePath)));
   }
 
   return {
@@ -209,6 +197,10 @@ export async function removeLocalSkills({
     removed,
     skipped
   };
+}
+
+export async function listInstalledLocalSkills({ skillsRoot, codexHome }) {
+  return getInstalledShippedSkills({ skillsRoot, codexHome });
 }
 
 export async function initProject({

@@ -136,12 +136,40 @@ body {
     @apply overflow-hidden rounded-[24px] border border-white/[0.08] bg-white/[0.02];
   }
 
+  .docs-figure__button {
+    @apply block w-full cursor-zoom-in bg-transparent p-0 text-left transition duration-200 hover:opacity-95;
+  }
+
   .docs-figure__image {
     @apply block w-full;
   }
 
   .docs-figure__caption {
     @apply border-t border-white/[0.08] px-4 py-3 text-sm leading-6 text-white/[0.56] md:px-5;
+  }
+
+  .docs-lightbox {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8;
+  }
+
+  .docs-lightbox__backdrop {
+    @apply absolute inset-0 border-0 bg-black/80 p-0;
+  }
+
+  .docs-lightbox__content {
+    @apply relative z-10 max-h-[92vh] w-full max-w-[1320px] overflow-auto rounded-[28px] border border-white/[0.08] bg-[#0d1016] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.42)] md:p-5;
+  }
+
+  .docs-lightbox__close {
+    @apply ml-auto mb-3 inline-flex rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-sm font-medium text-white/[0.82] transition hover:bg-white/[0.08] hover:text-white;
+  }
+
+  .docs-lightbox__image {
+    @apply block max-h-[76vh] w-full rounded-[20px] object-contain;
+  }
+
+  .docs-lightbox__caption {
+    @apply mt-4 text-sm leading-6 text-white/[0.6];
   }
 
   .info-card {

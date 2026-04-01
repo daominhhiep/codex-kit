@@ -3,28 +3,15 @@
 [![npm version](https://img.shields.io/npm/v/@daominhhiep/codex-kit.svg)](https://www.npmjs.com/package/@daominhhiep/codex-kit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**[Official Website](https://codexkit.xyz/)** | **[Unikorn](https://unikorn.vn/p/codex-kit)**
+> Codex-native starter kit with scaffolded docs, skills, workflows, agents, plugin support, and local skill management.
 
+**[Official Website](https://codexkit.xyz/)** | **[Web Docs](https://codexkit.xyz/#/docs/introduction)** | **[Unikorn](https://unikorn.vn/p/codex-kit)**
 
-Codex Kit is a Codex-native starter kit for teams that want a reusable project scaffold with routing docs, a shipped skill catalog, workflow playbooks, focused subagents, MCP-ready config, and managed updates.
+Codex Kit helps you bootstrap a repository that already knows how to work with Codex.
 
-The goal is simple: run `codex-kit init` and get a repository that already feels ready for Codex, instead of rebuilding the same operating layer in every new project.
+Instead of rebuilding the same operating layer in every project, you get a ready-to-use scaffold with routing docs, a shipped skill catalog, workflow playbooks, focused subagents, Codex config, and update/status commands.
 
-## What It Installs
-
-The scaffold currently ships with:
-
-- root routing docs: `AGENTS.md`, `ARCHITECTURE.md`, `AGENT_FLOW.md`
-- 40+ skills in `.agents/skills`
-- 15 workflow playbooks in `.agents/workflows`
-- 16 focused subagents in `.codex/agents`
-- shared `ui-ux-pro-max` data and scripts in `.agents/.shared`
-- project-scoped Codex config in `.codex/config.toml`
-- managed-file tracking in `.codex-kit/manifest.json`
-
-## Install
-
-Run with `npx`:
+## Quick Install
 
 ```bash
 npx @daominhhiep/codex-kit init
@@ -43,378 +30,115 @@ Initialize into a specific directory:
 npx @daominhhiep/codex-kit init --path ./my-project
 ```
 
-## Use As A Codex Plugin
+## What You Get
 
-Codex Kit ships with a local Codex plugin scaffold:
-
-- plugin manifest: `plugins/codex-kit/.codex-plugin/plugin.json`
-- bundled skill: `plugins/codex-kit/skills/codex-kit/SKILL.md`
-- local marketplace support via `.agents/plugins/marketplace.json`
-
-For the full Codex Plugin Directory flow and screenshots, see the `Installation` and `Local Codex Setup` pages in the web docs.
-
-## Requirements
-
-- Node.js `>=20`
+- root routing docs: `AGENTS.md`, `ARCHITECTURE.md`, `AGENT_FLOW.md`
+- 40+ shipped skills in `.agents/skills`
+- 15 workflow playbooks in `.agents/workflows`
+- 16 focused subagents in `.codex/agents`
+- shared UI/UX data and scripts in `.agents/.shared`
+- project-scoped Codex config in `.codex/config.toml`
+- managed-file tracking in `.codex-kit/manifest.json`
 
 ## CLI
 
 ```bash
 codex-kit init
 codex-kit update
+codex-kit setup-codex
+codex-kit sync-codex
+codex-kit list-skills
+codex-kit search-skills frontend
+codex-kit list-installed-skills
+codex-kit status
 codex-kit install-skills
 codex-kit sync-skills
 codex-kit remove-skills --skills clean-code,planning
-codex-kit status
 ```
 
-### Options
+Common examples:
 
 ```bash
-codex-kit init --path ./my-project
-codex-kit init --force
-codex-kit init --dry-run
-codex-kit init --install-plugin
-codex-kit init --quiet
+codex-kit list-skills
+codex-kit search-skills frontend
+codex-kit list-installed-skills
 
-codex-kit update --path ./my-project
-codex-kit update --force
-codex-kit update --dry-run
-codex-kit update --install-plugin
+codex-kit init --install-plugin
+codex-kit init --path ./my-project
+
+codex-kit setup-codex
+codex-kit sync-codex
 
 codex-kit install-skills
 codex-kit install-skills --skills clean-code,planning
-codex-kit install-skills --codex-home ~/.codex
-codex-kit install-skills --force
-codex-kit sync-skills
 codex-kit sync-skills --skills clean-code,planning
 codex-kit remove-skills --skills clean-code,planning
-
-codex-kit status --path ./my-project
 ```
 
-### Auto-install The Plugin In A Workspace
+## Codex Integration
 
-To scaffold the project and make the Codex Kit plugin available in that workspace:
+Codex Kit ships with a local Codex plugin scaffold:
+
+- plugin manifest: `plugins/codex-kit/.codex-plugin/plugin.json`
+- plugin skill: `plugins/codex-kit/skills/codex-kit/SKILL.md`
+- local marketplace support via `.agents/plugins/marketplace.json`
+
+There are two different installation scopes:
+
+- project-local: the plugin is copied into the current repository with `init --install-plugin`
+- user-local: the shipped skill catalog is installed into `${CODEX_HOME:-~/.codex}/skills` with `install-skills`
+
+To scaffold a project and include the plugin:
 
 ```bash
 npx @daominhhiep/codex-kit init --install-plugin
 ```
 
-This copies the Codex plugin into:
+To do the full local setup in one go for the current repository:
 
-```text
-.agents/plugins/codex-kit
+```bash
+npx @daominhhiep/codex-kit setup-codex
 ```
 
-and creates or updates:
+After upgrading Codex Kit, sync both the workspace plugin and local shipped skills:
 
-```text
-.agents/plugins/marketplace.json
+```bash
+npx @daominhhiep/codex-kit sync-codex
 ```
 
-with `installation: "INSTALLED_BY_DEFAULT"` so Codex can pick it up for that workspace.
-
-Then install it from the Codex Plugin Directory:
-
-1. Open `Plugins`.
-2. Choose the `Codex Kit Local` marketplace.
-3. Click `+` on `Codex Kit`.
-
-See the web docs `Local Codex Setup` page for the visual walkthrough.
-
-### Install The Kit Skills Into Local Codex
-
-To copy the shipped Codex Kit skill catalog into local Codex:
+To install the shipped skills into local Codex:
 
 ```bash
 npx @daominhhiep/codex-kit install-skills
 ```
 
-By default, this installs into:
+By default, local skills are installed into:
 
 ```text
 ${CODEX_HOME:-~/.codex}/skills
 ```
 
-Use `--codex-home` when you want to target a different local Codex directory.
-
-To sync the local copy with the current shipped version:
+To browse or search the shipped catalog:
 
 ```bash
-npx @daominhhiep/codex-kit sync-skills
+npx @daominhhiep/codex-kit list-skills
+npx @daominhhiep/codex-kit search-skills frontend
+npx @daominhhiep/codex-kit list-installed-skills
 ```
 
-To install, sync, or remove only specific skills:
+The bundled plugin can also help map natural requests such as "cài skill frontend" or "liệt kê skills debug" to the right Codex Kit commands.
 
-```bash
-npx @daominhhiep/codex-kit install-skills --skills clean-code,planning
-npx @daominhhiep/codex-kit sync-skills --skills clean-code,planning
-npx @daominhhiep/codex-kit remove-skills --skills clean-code,planning
-```
+## Requirements
 
-Notes:
+- Node.js `>=20`
 
-- `install-skills` adds missing skill files and skips existing ones unless you pass `--force`.
-- `sync-skills` overwrites the selected local skills with the current Codex Kit version.
-- `remove-skills` requires `--skills` so you do not accidentally remove the full local catalog.
+## Documentation
 
-## Scaffold Layout
+- [Introduction](https://codexkit.xyz/#/docs/introduction)
+- [Installation](https://codexkit.xyz/#/docs/installation)
+- [Local Codex Setup](https://codexkit.xyz/#/docs/local-codex-setup)
+- [CLI Reference](https://codexkit.xyz/#/docs/commands-and-options)
 
-`codex-kit init` writes this Codex-first project structure:
+## License
 
-```text
-AGENTS.md
-ARCHITECTURE.md
-AGENT_FLOW.md
-.agents/
-  skills/
-  .shared/
-  workflows/
-.codex/
-  config.toml
-  agents/
-.codex-kit/
-  manifest.json
-```
-
-## Core Pieces
-
-### `AGENTS.md`
-
-The main routing contract for the repository. It defines:
-
-- how to classify requests
-- which workflow should be used
-- which subagent fits each task shape
-- which skills pair well with each role
-- when to use `check` or `verify`
-
-### `.agents/skills/`
-
-Reusable knowledge modules in Codex `SKILL.md` format.
-
-The shipped catalog covers areas such as:
-
-- clean code and implementation quality
-- frontend and backend work
-- database design
-- testing and debugging
-- performance and security
-- SEO and GEO
-- mobile
-- MCP-related work
-
-The scaffold skill catalog is the product source of truth:
-
-- [templates/project/.agents/skills](https://github.com/daominhhiep/codex-kit/tree/main/templates/project/.agents/skills)
-
-### `.agents/workflows/`
-
-Process playbooks for common task types, including:
-
-- brainstorm
-- plan
-- create
-- enhance
-- debug
-- review
-- check
-- verify
-- test
-- deploy
-- preview
-- status
-- orchestrate
-- ship
-- UI/UX direction
-
-Workflows define process, not domain knowledge.
-
-### `.agents/.shared/`
-
-Shared packages for script-and-data tooling that do not naturally belong to a single skill.
-
-The default scaffold includes:
-
-- `.agents/.shared/ui-ux-pro-max/`
-
-This shared package contains:
-
-- CSV datasets for style, color, typography, landing-page patterns, UX guidance, and stack-specific recommendations
-- Python scripts for search and design-system generation
-
-### `.codex/agents/`
-
-Focused subagents defined as `.toml` files.
-
-The scaffold ships with roles such as:
-
-- `planner`
-- `explorer`
-- `implementer`
-- `frontend_specialist`
-- `backend_specialist`
-- `database_architect`
-- `mobile_developer`
-- `debugger`
-- `performance_optimizer`
-- `reviewer`
-- `security_auditor`
-- `docs_researcher`
-- `documentation_writer`
-- `seo_specialist`
-- `devops_engineer`
-- `test_writer`
-
-Each subagent stays intentionally narrow:
-
-- agent files define role
-- skills define knowledge
-- workflows define process
-- `AGENTS.md` defines routing
-
-### `.codex/config.toml`
-
-Project-scoped Codex configuration.
-
-The scaffold includes:
-
-- top-level model and approval settings
-- `[agents]` configuration
-- `[mcp_servers]` configuration
-- a ready-to-use Context7 MCP entry
-
-### `.codex-kit/manifest.json`
-
-Managed-file manifest used by the CLI.
-
-It tracks:
-
-- managed file paths
-- template hashes
-- installed hashes
-- kit version metadata
-
-This powers:
-
-- `status`
-- safe `update`
-- detection of missing or locally modified managed files
-
-## MCP Support
-
-MCP servers are configured in:
-
-- `.codex/config.toml`
-
-The scaffold ships with Context7 preconfigured:
-
-```toml
-[mcp_servers.context7]
-url = "https://mcp.context7.com/mcp"
-```
-
-You can optionally add an API key:
-
-```toml
-http_headers = { "CONTEXT7_API_KEY" = "YOUR_API_KEY" }
-```
-
-The config also includes commented examples for:
-
-- additional remote HTTP MCP servers
-- local stdio MCP servers
-
-## UI/UX Pro Max
-
-The scaffold includes a shared `ui-ux-pro-max` package, not just a workflow stub.
-
-Example commands inside a scaffolded project:
-
-```bash
-python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "saas dashboard" --domain product
-python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --design-system -p "Fintech App"
-python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "dashboard layout" --stack nextjs
-```
-
-Useful for:
-
-- design direction
-- design-system generation
-- stack-aware UI guidance
-- UX and visual decision support
-
-## How `update` Works
-
-`codex-kit update` is manifest-aware.
-
-That means:
-
-- missing managed files are detectable
-- locally modified managed files are skipped by default
-- `--force` overwrites managed files intentionally
-- only tracked scaffold files are refreshed
-
-This is designed to make re-running the kit safe in real repositories.
-
-## Status Output
-
-`codex-kit status` reports:
-
-- current installed version
-- managed file count
-- missing managed files
-- locally modified managed files
-- outdated managed files compared with the current template
-
-## Local Development
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Run tests:
-
-```bash
-npm test
-```
-
-Run the CLI locally:
-
-```bash
-node ./bin/codex-kit.js init --path ./tmp-codex-kit-test
-node ./bin/codex-kit.js status --path ./tmp-codex-kit-test
-node ./bin/codex-kit.js update --path ./tmp-codex-kit-test
-```
-
-## Smoke Test
-
-Recommended manual validation flow:
-
-1. Initialize a temporary project.
-2. Confirm `.agents/skills`, `.agents/workflows`, `.agents/.shared`, and `.codex/agents` exist.
-3. Run the `ui-ux-pro-max` search script in the generated project.
-4. Run `codex-kit status` against the generated project.
-
-Example:
-
-```bash
-node ./bin/codex-kit.js init --path ./tmp-codex-kit-test
-python3 ./tmp-codex-kit-test/.agents/.shared/ui-ux-pro-max/scripts/search.py "saas dashboard" --domain product
-node ./bin/codex-kit.js status --path ./tmp-codex-kit-test
-```
-
-## Package Contents
-
-The published npm package includes:
-
-- `bin/`
-- `src/`
-- `templates/`
-- `.codex-plugin/`
-- `README.md`
-
-The scaffold is the main shipped artifact. The CLI exists to install, inspect, and refresh that scaffold safely.
+MIT

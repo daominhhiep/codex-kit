@@ -160,17 +160,32 @@ AGENT_FLOW.md
         summary: "Install the Codex Kit plugin or skill catalog into local Codex.",
         intro: [
           "Use this page after the base project scaffold is in place.",
-          "It covers the two Codex-local integrations: the workspace plugin and the local skill catalog."
+          "It covers the two Codex-local integrations: the workspace plugin and the local skill catalog.",
+          "These are different scopes: the plugin is project-local, while the skill catalog is user-local."
         ],
         blocks: [
+          {
+            id: "installation-scopes",
+            title: "Installation Scopes",
+            bullets: [
+              "Project-local: `init --install-plugin` copies the plugin into the current repository under `.agents/plugins/codex-kit`.",
+              "User-local: `install-skills` copies the shipped skill catalog into `${CODEX_HOME:-~/.codex}/skills` for local Codex on the current machine.",
+              "Run both when you want a repository-specific plugin plus the full Codex Kit skill catalog available in local Codex.",
+              "After upgrading Codex Kit, use `sync-codex` to sync both scopes with one command."
+            ]
+          },
           {
             id: "install-plugin",
             title: "Install The Plugin In Codex",
             body: [
               "When you scaffold with `--install-plugin`, Codex Kit copies the plugin into `.agents/plugins/codex-kit` and creates `.agents/plugins/marketplace.json` with `installation: \"INSTALLED_BY_DEFAULT\"`.",
-              "After that, open the `Plugins` view in Codex, choose the `Codex Kit Local` marketplace, and click the `+` button on `Codex Kit`."
+              "After that, open the `Plugins` view in Codex, choose the `Codex Kit Local` marketplace, and click the `+` button on `Codex Kit`.",
+              "If you also want the full shipped skill catalog in local Codex, run the full setup command below."
             ],
-            code: `npx @daominhhiep/codex-kit init --install-plugin`,
+            code: `npx @daominhhiep/codex-kit init --install-plugin
+
+npx @daominhhiep/codex-kit setup-codex
+npx @daominhhiep/codex-kit sync-codex`,
             image: {
               src: "/codex-kit-plugin-install.png",
               alt: "Codex Plugin Directory showing the Codex Kit Local marketplace and the Codex Kit install card.",
@@ -208,6 +223,20 @@ npx @daominhhiep/codex-kit install-skills --codex-home ~/.codex`,
             }
           },
           {
+            id: "local-skill-install-permissions",
+            title: "Local Skill Install Permission Prompt",
+            body: [
+              "Installing into local Codex may require approval because the CLI writes into `${CODEX_HOME:-~/.codex}/skills`, which is typically outside the current workspace.",
+              "This is especially relevant when you install a specific skill with `--skills` from inside a Codex thread."
+            ],
+            image: {
+              src: "/codex-install-skill.png",
+              alt: "Codex thread showing install-skills commands and the permission prompt for writing a skill into ~/.codex/skills.",
+              caption:
+                "A targeted install such as `install-skills --skills frontend-design` can trigger a local permission prompt before Codex writes into the local skills directory."
+            }
+          },
+          {
             id: "local-skill-maintenance",
             title: "Sync Or Remove Local Skills",
             body: [
@@ -220,6 +249,20 @@ npx @daominhhiep/codex-kit install-skills --codex-home ~/.codex`,
 npx @daominhhiep/codex-kit install-skills --skills clean-code,planning
 npx @daominhhiep/codex-kit sync-skills --skills clean-code,planning
 npx @daominhhiep/codex-kit remove-skills --skills clean-code,planning`
+          },
+          {
+            id: "skill-discovery",
+            title: "Discover Available Skills",
+            body: [
+              "Use `list-skills` to browse the full shipped catalog grouped by category.",
+              "Use `search-skills <query>` to find the right skill by domain, behavior, or keyword.",
+              "Use `list-installed-skills` to compare what is already installed in local Codex.",
+              "The bundled plugin can also map natural requests such as `cài skill frontend` or `liệt kê skills debug` to the right Codex Kit commands."
+            ],
+            code: `npx @daominhhiep/codex-kit list-skills
+
+npx @daominhhiep/codex-kit search-skills frontend
+npx @daominhhiep/codex-kit list-installed-skills`
           }
         ]
       }
@@ -254,27 +297,67 @@ npx @daominhhiep/codex-kit remove-skills --skills clean-code,planning`
             cards: [
               {
                 title: "planner",
-                description: "Breaks work into decisions, steps, risks, and sequencing."
+                description: "Planning, sequencing, risks, and acceptance criteria."
               },
               {
                 title: "explorer",
-                description: "Maps unfamiliar code paths and dependency flow before changes."
+                description: "Read-only repository mapping and dependency tracing."
               },
               {
                 title: "implementer",
-                description: "Makes the smallest defensible code change once scope is clear."
+                description: "Small, targeted code changes once the task is clear."
               },
               {
                 title: "frontend-specialist",
-                description: "Builds or refactors UI and interaction layers."
+                description: "UI, component architecture, accessibility, and frontend behavior."
               },
               {
                 title: "backend-specialist",
-                description: "Implements APIs, services, and server-side logic."
+                description: "APIs, validation, data access, and server-side logic."
               },
               {
                 title: "database-architect",
-                description: "Owns schemas, migrations, and query design."
+                description: "Schemas, migrations, indexes, queries, and data integrity."
+              },
+              {
+                title: "mobile-developer",
+                description: "Mobile UX, platform conventions, and runtime performance."
+              },
+              {
+                title: "debugger",
+                description: "Reproduction, evidence gathering, and root-cause isolation."
+              },
+              {
+                title: "reviewer",
+                description: "Correctness, security, regressions, and missing tests."
+              },
+              {
+                title: "test-writer",
+                description: "Focused tests that prove intended behavior."
+              },
+              {
+                title: "devops-engineer",
+                description: "CI, environments, deployments, pipelines, and operations."
+              },
+              {
+                title: "docs-researcher",
+                description: "Read-only verification of framework and API behavior."
+              },
+              {
+                title: "documentation-writer",
+                description: "READMEs, setup guides, handoff notes, and technical docs."
+              },
+              {
+                title: "performance-optimizer",
+                description: "Profiling, bottleneck analysis, bundle size, and runtime speed."
+              },
+              {
+                title: "security-auditor",
+                description: "Threat review, auth flows, validation, and attack surface."
+              },
+              {
+                title: "seo-specialist",
+                description: "SEO, GEO, metadata, content structure, and citation readiness."
               }
             ]
           },
@@ -294,10 +377,11 @@ npx @daominhhiep/codex-kit remove-skills --skills clean-code,planning`
         slug: "skills",
         section: "Core Concepts",
         title: "Skills",
-        summary: "Reusable knowledge modules written in Codex `SKILL.md` format.",
+        summary: "Reusable knowledge modules written in Codex `SKILL.md` format, grouped by category.",
         intro: [
           "Skills live in `.agents/skills/<name>/SKILL.md` and should stay narrow, explicit, and reusable across repositories.",
-          "A skill can include `references/`, `scripts/`, and `assets/`, but it should never behave like hidden automation."
+          "A skill can include `references/`, `scripts/`, and `assets/`, but it should never behave like hidden automation.",
+          "The shipped catalog is grouped below by Skill Categories so you can find the right skill quickly."
         ],
         blocks: [
           {
@@ -311,23 +395,249 @@ npx @daominhhiep/codex-kit remove-skills --skills clean-code,planning`
             ]
           },
           {
-            id: "skill-catalog",
-            title: "Catalog Coverage",
+            id: "skill-categories-intro",
+            title: "Skill Categories",
+            body: [
+              "48 shipped skills organized by domain."
+            ]
+          },
+          {
+            id: "skill-category-routing",
+            title: "Planning & Routing",
             cards: [
               {
-                title: "Implementation",
-                description:
-                  "Includes clean code, frontend design, Node.js best practices, API patterns, database design, and mobile design."
+                title: "app-builder",
+                description: "New app scaffolding, stack selection, and high-level project setup."
               },
               {
-                title: "Validation",
-                description:
-                  "Includes testing patterns, TDD workflow, webapp testing, release readiness, debugging, and systematic debugging."
+                title: "architecture",
+                description: "Requirements, tradeoffs, ADRs, and system design decisions."
               },
               {
-                title: "Specialized",
-                description:
-                  "Includes SEO, GEO, MCP builder, performance profiling, vulnerability scanning, red-team tactics, and more."
+                title: "behavioral-modes",
+                description: "Explicit working modes such as brainstorm, implement, debug, or review."
+              },
+              {
+                title: "brainstorming",
+                description: "Clarify scope and generate options before implementation."
+              },
+              {
+                title: "intelligent-routing",
+                description: "Choose the best specialist skills or subagents for a task."
+              },
+              {
+                title: "parallel-agents",
+                description: "Bounded delegation and parallel subagent coordination."
+              },
+              {
+                title: "plan-writing",
+                description: "Written implementation plans, breakdowns, and checklists."
+              },
+              {
+                title: "planning",
+                description: "Execution-ready planning with scope, risks, and acceptance criteria."
+              },
+              {
+                title: "repo-onboarding",
+                description: "Fast map of an unfamiliar repository before making changes."
+              }
+            ]
+          },
+          {
+            id: "skill-category-implementation",
+            title: "Backend & Platform",
+            cards: [
+              {
+                title: "clean-code",
+                description: "Pragmatic coding standards and scoped implementation quality."
+              },
+              {
+                title: "api-patterns",
+                description: "API design, response shapes, versioning, and protocol choices."
+              },
+              {
+                title: "database-design",
+                description: "Schema design, migrations, indexes, and query strategy."
+              },
+              {
+                title: "nodejs-best-practices",
+                description: "Node.js architecture, async patterns, and backend decision-making."
+              },
+              {
+                title: "python-patterns",
+                description: "Python project structure, async choices, and framework direction."
+              },
+              {
+                title: "rust-pro",
+                description: "Modern Rust systems work, async design, and performance."
+              },
+              {
+                title: "mcp-builder",
+                description: "Design principles for building MCP servers, tools, and resources."
+              }
+            ]
+          },
+          {
+            id: "skill-category-frontend",
+            title: "Frontend & UI",
+            cards: [
+              {
+                title: "frontend-design",
+                description: "Web UI design systems, hierarchy, typography, and aesthetics."
+              },
+              {
+                title: "mobile-design",
+                description: "Touch-first UX, mobile patterns, and platform conventions."
+              },
+              {
+                title: "nextjs-react-expert",
+                description: "React or Next.js architecture, rendering, and performance."
+              },
+              {
+                title: "tailwind-patterns",
+                description: "Tailwind CSS v4 patterns, tokens, and utility architecture."
+              },
+              {
+                title: "web-design-guidelines",
+                description: "UI audits against structured web interface guidelines."
+              },
+              {
+                title: "i18n-localization",
+                description: "Translations, locale files, RTL support, and hardcoded string checks."
+              },
+              {
+                title: "game-development",
+                description: "Game-project routing and platform-specific game skill selection."
+              }
+            ]
+          },
+          {
+            id: "skill-category-debug-review",
+            title: "Debugging & Review",
+            cards: [
+              {
+                title: "bug-hunt",
+                description: "Disciplined reproduction, scoping, and root-cause isolation."
+              },
+              {
+                title: "debugging",
+                description: "Evidence-based debugging before changing code."
+              },
+              {
+                title: "systematic-debugging",
+                description: "Structured 4-phase debugging with explicit hypotheses."
+              },
+              {
+                title: "code-review",
+                description: "Patch and branch review for correctness and regressions."
+              },
+              {
+                title: "code-review-checklist",
+                description: "Supplemental prompts and checks during code review."
+              },
+              {
+                title: "high-signal-review",
+                description: "Findings-first review output focused on real risk."
+              }
+            ]
+          },
+          {
+            id: "skill-category-testing",
+            title: "Testing & Validation",
+            cards: [
+              {
+                title: "lint-and-validate",
+                description: "Linting, type checks, formatting, and static validation."
+              },
+              {
+                title: "tdd-workflow",
+                description: "RED-GREEN-REFACTOR test-driven development cycle."
+              },
+              {
+                title: "test-hardening",
+                description: "Strengthen weak or flaky tests around critical behavior."
+              },
+              {
+                title: "testing-patterns",
+                description: "Unit, integration, and mocking strategies."
+              },
+              {
+                title: "webapp-testing",
+                description: "Browser testing, deep audits, and Playwright-style checks."
+              },
+              {
+                title: "release-readiness",
+                description: "Higher-confidence validation for rollout and operational risk."
+              }
+            ]
+          },
+          {
+            id: "skill-category-docs-ops",
+            title: "Docs, Delivery & Operations",
+            cards: [
+              {
+                title: "doc",
+                description: "Work with `.docx` documents where formatting fidelity matters."
+              },
+              {
+                title: "docs-shipper",
+                description: "Ship docs that match real product behavior and commands."
+              },
+              {
+                title: "documentation-templates",
+                description: "README, API, and technical documentation structure guidance."
+              },
+              {
+                title: "deployment-procedures",
+                description: "Safe deployment principles, verification, and rollback thinking."
+              },
+              {
+                title: "server-management",
+                description: "Operational process management, monitoring, and scaling decisions."
+              },
+              {
+                title: "mcp-onboarding",
+                description: "Evaluate, adopt, and roll out MCP servers safely."
+              }
+            ]
+          },
+          {
+            id: "skill-category-security-performance",
+            title: "Security, Performance & Discoverability",
+            cards: [
+              {
+                title: "vulnerability-scanner",
+                description: "OWASP-aware vulnerability analysis and attack-surface review."
+              },
+              {
+                title: "red-team-tactics",
+                description: "Authorized adversary-emulation and defensive reporting patterns."
+              },
+              {
+                title: "performance-profiling",
+                description: "Measure-first profiling and performance optimization guidance."
+              },
+              {
+                title: "seo-fundamentals",
+                description: "Search visibility, E-E-A-T, and Core Web Vitals basics."
+              },
+              {
+                title: "geo-fundamentals",
+                description: "Optimization for AI search and citation engines."
+              }
+            ]
+          },
+          {
+            id: "skill-category-shell",
+            title: "Shell & Environment",
+            cards: [
+              {
+                title: "bash-linux",
+                description: "Bash and Linux command patterns for macOS or Linux."
+              },
+              {
+                title: "powershell-windows",
+                description: "PowerShell patterns, pitfalls, and Windows shell syntax."
               }
             ]
           },
@@ -337,6 +647,18 @@ npx @daominhhiep/codex-kit remove-skills --skills clean-code,planning`
             body: [
               "The default rule is simple: load as little as you can while still doing good work.",
               "Choose the workflow first, then add only the skills that meaningfully improve the current task."
+            ]
+          },
+          {
+            id: "skill-structure",
+            title: "Skill Structure",
+            bullets: [
+              "`SKILL.md`: the instruction contract and main entrypoint for the skill.",
+              "`references/`: deeper examples, templates, or supporting guidance.",
+              "`scripts/`: optional helpers that should be invoked deliberately, not silently.",
+              "`assets/`: supporting files such as prompts, data, or media.",
+              "`agents/openai.yaml`: optional invocation policy for skills that bundle deeper routing behavior.",
+              "Some skills also include task-specific files such as `verify.md`, `handoff.md`, or checklists."
             ]
           }
         ]
@@ -348,7 +670,8 @@ npx @daominhhiep/codex-kit remove-skills --skills clean-code,planning`
         summary: "Process playbooks for common task types.",
         intro: [
           "Workflows live in `.agents/workflows/*.md` and describe repeatable ways to approach common tasks such as planning, implementation, debugging, review, testing, preview, and deployment.",
-          "They encode process, not domain knowledge."
+          "They encode process, not domain knowledge.",
+          "A workflow is not a CLI command. In practice, you either let Codex route to it through `AGENTS.md` or you ask for it explicitly in your prompt."
         ],
         blocks: [
           {
@@ -357,6 +680,15 @@ npx @daominhhiep/codex-kit remove-skills --skills clean-code,planning`
             body: [
               "Classify the request before loading extra skills or spawning subagents.",
               "Once the task shape is clear, choose the narrowest workflow that matches it."
+            ]
+          },
+          {
+            id: "workflow-invocation",
+            title: "How To Invoke A Workflow",
+            bullets: [
+              "Let Codex route automatically from the request and the rules in `AGENTS.md`.",
+              "Or name the workflow explicitly in your prompt, for example: `Use the plan workflow before making changes.`",
+              "Use workflows as execution modes or playbooks, not as shell commands."
             ]
           },
           {
@@ -395,6 +727,64 @@ verify`
   {
     title: "Guide",
     pages: [
+      {
+        slug: "how-to-use-workflows",
+        section: "Guide",
+        title: "How To Use Workflows",
+        summary: "Use workflows by naming the execution mode you want in your prompt.",
+        intro: [
+          "The easiest way to use a workflow is to state the workflow name in plain language.",
+          "You do not run workflows from the CLI. You ask Codex to use them while working on the repository."
+        ],
+        blocks: [
+          {
+            id: "basic-pattern",
+            title: "Basic Prompt Pattern",
+            body: [
+              "A simple pattern works well: describe the task, then name the workflow you want.",
+              "Use direct prompts such as `Use the plan workflow before editing`, `Handle this as debug`, or `Do a review of the current branch`."
+            ],
+            code: `Use the plan workflow before making changes.
+Use the debug workflow to isolate the root cause.
+Use the review workflow on the current branch.`
+          },
+          {
+            id: "workflow-cheatsheet",
+            title: "When To Use Which Workflow",
+            bullets: [
+              "`brainstorm`: the request is still vague and you need options or tradeoffs.",
+              "`plan`: you want a task breakdown before implementation.",
+              "`create`: the request is concrete and ready to implement.",
+              "`enhance`: you are extending or refining existing behavior.",
+              "`debug`: there is a bug, regression, or unclear runtime behavior.",
+              "`review`: you want findings on a patch, branch, or design.",
+              "`check`: you want fast validation after a normal code change.",
+              "`test`: the main task is writing or running tests.",
+              "`verify`: the change is release-sensitive or cross-cutting.",
+              "`preview`: you want to start, fix, or verify a local preview.",
+              "`deploy`: you are preparing or executing a deployment.",
+              "`status`: you want a concise snapshot of current repository state.",
+              "`orchestrate`: multiple bounded subagents are justified.",
+              "`ui-ux-pro-max`: the task is primarily UI direction or UX shaping."
+            ]
+          },
+          {
+            id: "copy-paste-examples",
+            title: "Copy-Paste Examples",
+            code: `Brainstorm 3 realistic approaches for adding auth to this app.
+
+Use the plan workflow and break this change into concrete implementation steps.
+
+Use create to implement this feature in the current repo.
+
+Use debug to find the root cause of this failing login flow before changing code.
+
+Use review on the current branch and focus on correctness, regressions, and missing tests.
+
+Use verify before we ship this release candidate.`
+          }
+        ]
+      },
       {
         slug: "structured-brainstorming",
         section: "Guide",
@@ -505,6 +895,38 @@ verify`
         ]
       },
       {
+        slug: "iterative-enhancement",
+        section: "Guide",
+        title: "Iterative Enhancement",
+        summary: "Use `enhance` when the repository already has working patterns and you want to evolve existing behavior.",
+        intro: [
+          "The `enhance` workflow is for iterative work inside an existing application.",
+          "Its job is to preserve the current system shape while making the requested change in the smallest sensible scope."
+        ],
+        blocks: [
+          {
+            id: "when-to-enhance",
+            title: "When To Use",
+            bullets: [
+              "The codebase already has established architecture and conventions.",
+              "You are extending or refining existing behavior rather than building from zero.",
+              "You want to preserve current patterns unless there is a strong reason to change them."
+            ]
+          },
+          {
+            id: "enhance-process",
+            title: "Suggested Process",
+            bullets: [
+              "Inspect the current implementation and feature boundary first.",
+              "Confirm the affected files, contracts, and dependencies.",
+              "Escalate to `plan` if the change is broader than it first appears.",
+              "Implement incrementally and preserve existing conventions where reasonable.",
+              "Run `check`, or `verify` if the change crosses multiple subsystems."
+            ]
+          }
+        ]
+      },
+      {
         slug: "advanced-ui-design",
         section: "Guide",
         title: "Advanced UI Design",
@@ -589,6 +1011,71 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --doma
         ]
       },
       {
+        slug: "review-workflow",
+        section: "Guide",
+        title: "Review Workflow",
+        summary: "Use `review` to find correctness, regression, and rollout risks before code is relied on.",
+        intro: [
+          "The `review` workflow is for branch review, patch review, and design review.",
+          "Its output should lead with findings, not style commentary."
+        ],
+        blocks: [
+          {
+            id: "review-focus",
+            title: "What To Look For",
+            bullets: [
+              "Correctness issues",
+              "Security problems",
+              "Regression risk",
+              "Missing tests",
+              "Rollout or migration risk when relevant"
+            ]
+          },
+          {
+            id: "review-rules",
+            title: "Rules",
+            bullets: [
+              "Map the affected code paths before judging the patch.",
+              "Prioritize concrete findings over style feedback.",
+              "Cite files, symbols, and reproduction hints where possible.",
+              "If there are no findings, say so and mention residual risk or testing gaps."
+            ]
+          }
+        ]
+      },
+      {
+        slug: "check-and-verify",
+        section: "Guide",
+        title: "Check And Verify",
+        summary: "Use `check` for fast validation and `verify` for higher-confidence release checks.",
+        intro: [
+          "These two workflows are validation tiers.",
+          "Use `check` during normal development and promote to `verify` when the cost of failure is meaningfully higher."
+        ],
+        blocks: [
+          {
+            id: "check-vs-verify",
+            title: "When To Use Each",
+            bullets: [
+              "`check`: normal code changes, small bug fixes, narrow refactors.",
+              "`verify`: deployment-affecting changes, migrations, auth or billing work, and cross-cutting refactors.",
+              "Promote from `check` to `verify` when validation signal is weak or release risk is non-trivial."
+            ]
+          },
+          {
+            id: "validation-output",
+            title: "Expected Output",
+            bullets: [
+              "Commands run",
+              "Result summary",
+              "Anything skipped",
+              "Release blockers or warnings for `verify`",
+              "Residual risk if validation is partial"
+            ]
+          }
+        ]
+      },
+      {
         slug: "preview-management",
         section: "Guide",
         title: "Preview Management",
@@ -607,6 +1094,29 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --doma
               "Start, stop, restart, or verify the server as requested.",
               "Resolve port conflicts explicitly instead of guessing.",
               "Report the local URL and basic health status."
+            ]
+          }
+        ]
+      },
+      {
+        slug: "ship-handoffs",
+        section: "Guide",
+        title: "Ship Handoffs",
+        summary: "Use `ship` to prepare a merge, release, or deployment handoff that is easy to act on.",
+        intro: [
+          "The `ship` workflow is for high-signal handoff notes after implementation and validation are done.",
+          "It should make follow-through easy for whoever merges, releases, or operates the change."
+        ],
+        blocks: [
+          {
+            id: "ship-contents",
+            title: "What To Include",
+            bullets: [
+              "What changed and why",
+              "Validation performed",
+              "Anything still unverified",
+              "Rollout, migration, or config notes",
+              "Rollback assumptions or follow-up items"
             ]
           }
         ]
@@ -702,7 +1212,7 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --doma
         title: "Commands & Options",
         summary: "The commands and flags exposed by the Codex Kit CLI.",
         intro: [
-          "Codex Kit keeps the CLI surface intentionally small: initialize the scaffold, update managed files, and inspect status.",
+          "Codex Kit keeps the CLI surface focused: scaffold a repo, update managed files, inspect status, and manage local Codex skills.",
           "The CLI entrypoint is exposed through the `codex-kit` binary."
         ],
         blocks: [
@@ -711,7 +1221,15 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --doma
             title: "Commands",
             code: `codex-kit init
 codex-kit update
-codex-kit status`
+codex-kit setup-codex
+codex-kit sync-codex
+codex-kit list-skills
+codex-kit search-skills frontend
+codex-kit list-installed-skills
+codex-kit status
+codex-kit install-skills
+codex-kit sync-skills
+codex-kit remove-skills --skills clean-code,planning`
           },
           {
             id: "options",
@@ -719,12 +1237,49 @@ codex-kit status`
             code: `codex-kit init --path ./my-project
 codex-kit init --force
 codex-kit init --dry-run
+codex-kit init --install-plugin
 codex-kit init --quiet
+
+codex-kit setup-codex --path ./my-project
+codex-kit setup-codex --codex-home ~/.codex
+codex-kit setup-codex --skills clean-code,planning
+codex-kit sync-codex
+codex-kit sync-codex --skills clean-code,planning
+
+codex-kit list-skills
+codex-kit list-skills --skills clean-code,planning
+codex-kit search-skills frontend
+codex-kit list-installed-skills
+codex-kit list-installed-skills --codex-home ~/.codex
 
 codex-kit update --path ./my-project
 codex-kit update --force
+codex-kit update --dry-run
+codex-kit update --install-plugin
+
+codex-kit install-skills --codex-home ~/.codex
+codex-kit install-skills --skills clean-code,planning
+codex-kit install-skills --force
+codex-kit sync-skills --skills clean-code,planning
+codex-kit remove-skills --skills clean-code,planning
 
 codex-kit status --path ./my-project`
+          },
+          {
+            id: "local-skill-commands",
+            title: "Local Skill Commands",
+            bullets: [
+              "`list-skills` shows the full shipped catalog grouped by category with quick install commands.",
+              "`search-skills <query>` finds skills by name, description, or category terms.",
+              "`list-installed-skills` reports which shipped skills already exist in local Codex.",
+              "`install-skills` installs missing Codex Kit skills into `${CODEX_HOME:-~/.codex}/skills` by default.",
+              "`sync-skills` overwrites the selected local skills with the current shipped version.",
+              "`remove-skills` removes only the skill folders named in `--skills`.",
+              "`setup-codex` combines workspace plugin setup with local skill installation and prints the next steps.",
+              "`sync-codex` combines workspace plugin sync with local shipped skill sync after a package upgrade.",
+              "Use `--codex-home` to target a different local Codex directory.",
+              "Use `--skills` to work on specific skill names instead of the full catalog."
+            ]
           },
           {
             id: "managed-files",

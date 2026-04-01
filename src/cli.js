@@ -5,11 +5,17 @@ import { fileURLToPath } from "node:url";
 import {
   initProject,
   installLocalSkills,
+  listInstalledLocalSkills,
   removeLocalSkills,
   statusProject,
   syncLocalSkills,
   updateProject
 } from "./lib/kit.js";
+import {
+  getSelectedShippedSkills,
+  groupSkillsByCategory,
+  searchShippedSkills
+} from "./lib/skills.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = path.resolve(__dirname, "../package.json");
@@ -20,6 +26,16 @@ function printHelp() {
 Commands:
   init      Install the Codex project scaffold
   update    Refresh kit-managed files
+  setup-codex
+            Scaffold the plugin into the workspace and install shipped skills locally
+  sync-codex
+            Sync the workspace plugin and local shipped skills after upgrading Codex Kit
+  list-skills
+            List shipped Codex Kit skills grouped by category
+  search-skills <query>
+            Search shipped Codex Kit skills by name, description, or category
+  list-installed-skills
+            List shipped Codex Kit skills currently installed in local Codex
   install-skills
             Install the shipped Codex Kit skills into local Codex
   sync-skills
@@ -53,6 +69,7 @@ function parseArgs(argv) {
     installPlugin: false,
     codexHome: process.env.CODEX_HOME || path.join(os.homedir(), ".codex"),
     skills: [],
+    positionals: [],
     path: process.cwd()
   };
 
@@ -93,7 +110,10 @@ function parseArgs(argv) {
     } else if (arg === "-h" || arg === "--help") {
       options.help = true;
     } else {
-      throw new Error(`Unknown option: ${arg}`);
+      if (arg.startsWith("-")) {
+        throw new Error(`Unknown option: ${arg}`);
+      }
+      options.positionals.push(arg);
     }
   }
 
@@ -179,6 +199,89 @@ export async function runCli(argv) {
     return;
   }
 
+  if (options.command === "setup-codex") {
+    const initResult = await initProject({
+      targetDir: options.path,
+      templateRoot,
+      pluginRoot,
+      version,
+      installPlugin: true,
+      force: options.force,
+      dryRun: options.dryRun
+    });
+    const skillsResult = await installLocalSkills({
+      skillsRoot,
+      codexHome: options.codexHome,
+      skills: options.skills,
+      force: options.force,
+      dryRun: options.dryRun
+    });
+
+    if (!options.quiet) {
+      console.log(
+        options.dryRun
+          ? `Planned Codex setup for ${options.path}`
+          : `Completed Codex setup for ${options.path}`
+      );
+      console.log(
+        options.dryRun
+          ? `Planned ${initResult.written.length} workspace file writes`
+          : `Workspace scaffold ready${initResult.pluginInstalled ? " with plugin support" : ""}`
+      );
+      console.log(
+        options.dryRun
+          ? `Planned ${skillsResult.written.length} local skill file writes in ${skillsResult.targetDir}`
+          : `Installed shipped skills into ${skillsResult.targetDir}`
+      );
+      console.log("\nNext steps:");
+      console.log(`  1. Open Codex in ${options.path}`);
+      console.log("  2. Open Plugins and choose `Codex Kit Local`.");
+      console.log("  3. Click `+` on `Codex Kit` to install the workspace plugin.");
+      console.log("  4. Start a new thread and use `@Codex Kit` or any installed local skills.");
+    }
+    return;
+  }
+
+  if (options.command === "sync-codex") {
+    const updateResult = await updateProject({
+      targetDir: options.path,
+      templateRoot,
+      pluginRoot,
+      version,
+      installPlugin: true,
+      force: options.force,
+      dryRun: options.dryRun
+    });
+    const skillsResult = await syncLocalSkills({
+      skillsRoot,
+      codexHome: options.codexHome,
+      skills: options.skills,
+      dryRun: options.dryRun
+    });
+
+    if (!options.quiet) {
+      console.log(
+        options.dryRun
+          ? `Planned Codex sync for ${options.path}`
+          : `Synced Codex setup for ${options.path}`
+      );
+      console.log(
+        options.dryRun
+          ? `Planned ${updateResult.written.length} workspace file updates`
+          : `Workspace scaffold and plugin synced`
+      );
+      console.log(
+        options.dryRun
+          ? `Planned ${skillsResult.written.length} local skill file syncs in ${skillsResult.targetDir}`
+          : `Local shipped skills synced into ${skillsResult.targetDir}`
+      );
+      if (updateResult.skipped.length > 0) {
+        console.log(`Skipped ${updateResult.skipped.length} locally modified workspace files`);
+      }
+    }
+    return;
+  }
+
   if (options.command === "status") {
     const result = await statusProject({
       targetDir: options.path,
@@ -209,6 +312,69 @@ export async function runCli(argv) {
       for (const file of result.outdated) {
         console.log(`  - ${file}`);
       }
+    }
+    return;
+  }
+
+  if (options.command === "list-skills") {
+    const skills = await getSelectedShippedSkills({ skillsRoot, skills: options.skills });
+    const grouped = groupSkillsByCategory(skills);
+
+    console.log(`Shipped Codex Kit skills: ${skills.length}`);
+    for (const group of grouped) {
+      console.log(`\n${group.category}`);
+      for (const skill of group.skills) {
+        console.log(`  - ${skill.name}: ${skill.summary}`);
+        console.log(`    install: codex-kit install-skills --skills ${skill.name}`);
+      }
+    }
+    return;
+  }
+
+  if (options.command === "search-skills") {
+    const query = options.positionals.join(" ").trim();
+    if (!query) {
+      throw new Error("`search-skills` requires a search query.");
+    }
+
+    const results = await searchShippedSkills({ skillsRoot, query });
+    if (results.length === 0) {
+      console.log(`No shipped skills matched "${query}".`);
+      return;
+    }
+
+    console.log(`Matches for "${query}": ${results.length}`);
+    for (const skill of results) {
+      console.log(`\n- ${skill.name} [${skill.category}]`);
+      console.log(`  ${skill.summary}`);
+      console.log(`  install: codex-kit install-skills --skills ${skill.name}`);
+    }
+    return;
+  }
+
+  if (options.command === "list-installed-skills") {
+    const result = await listInstalledLocalSkills({
+      skillsRoot,
+      codexHome: options.codexHome
+    });
+    const grouped = groupSkillsByCategory(result.installed);
+
+    console.log(`Installed Codex Kit skills in ${result.targetRoot}: ${result.installed.length}`);
+    if (result.installed.length === 0) {
+      console.log("No shipped Codex Kit skills are currently installed.");
+      return;
+    }
+
+    for (const group of grouped) {
+      console.log(`\n${group.category}`);
+      for (const skill of group.skills) {
+        console.log(`  - ${skill.name}: ${skill.summary}`);
+      }
+    }
+
+    if (result.missing.length > 0) {
+      console.log(`\nMissing from local Codex: ${result.missing.length}`);
+      console.log("  Run `codex-kit install-skills` to install the full shipped catalog.");
     }
     return;
   }
@@ -260,6 +426,7 @@ export async function runCli(argv) {
     }
 
     const result = await removeLocalSkills({
+      skillsRoot,
       codexHome: options.codexHome,
       skills: options.skills,
       dryRun: options.dryRun
