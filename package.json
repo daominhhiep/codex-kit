@@ -1,7 +1,7 @@
 {
   "name": "@daominhhiep/codex-kit",
-  "version": "0.1.0",
-  "description": "Codex-native starter kit with reusable skills, subagents, workflows, and a project scaffold CLI.",
+  "version": "0.1.1",
+  "description": "Codex kit with reusable skills, subagents, workflows, and a project scaffold CLI.",
   "type": "module",
   "bin": {
     "codex-kit": "./bin/codex-kit.js"
