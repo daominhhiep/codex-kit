@@ -1,5 +1,11 @@
 # Codex Kit
 
+[![npm version](https://img.shields.io/npm/v/@daominhhiep/codex-kit.svg)](https://www.npmjs.com/package/@daominhhiep/codex-kit)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**[Official Website](https://codexkit.xyz/)** | **[Unikorn](https://unikorn.vn/p/codex-kit)**
+
+
 Codex Kit is a Codex-native starter kit for teams that want a reusable project scaffold with routing docs, a shipped skill catalog, workflow playbooks, focused subagents, MCP-ready config, and managed updates.
 
 The goal is simple: run `codex-kit init` and get a repository that already feels ready for Codex, instead of rebuilding the same operating layer in every new project.
