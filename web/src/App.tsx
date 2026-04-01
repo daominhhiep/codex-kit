@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { allPages, type DocPage } from "./content";
 import { DocsFooter } from "./components/DocsFooter";
 import { DocsHeader } from "./components/DocsHeader";
@@ -46,38 +47,41 @@ function App() {
   const isDocsView = route.view === "docs";
 
   return (
-    <div className="min-h-screen bg-docs text-docs-text">
-      <DocsHeader
-        query={query}
-        onQueryChange={setQuery}
-        onHomeClick={navigateToLanding}
-        onDocsClick={() => navigate(DEFAULT_PAGE)}
-        isDocsView={isDocsView}
-      />
+    <>
+      <div className="min-h-screen bg-docs text-docs-text">
+        <DocsHeader
+          query={query}
+          onQueryChange={setQuery}
+          onHomeClick={navigateToLanding}
+          onDocsClick={() => navigate(DEFAULT_PAGE)}
+          isDocsView={isDocsView}
+        />
 
-      {isDocsView ? (
-        <>
-          <div className="mx-auto grid max-w-[1600px] gap-0 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_260px]">
-            <DocsSidebar currentSlug={page.slug} sections={filteredSections} onNavigate={navigate} />
+        {isDocsView ? (
+          <>
+            <div className="mx-auto grid max-w-[1600px] gap-0 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_260px]">
+              <DocsSidebar currentSlug={page.slug} sections={filteredSections} onNavigate={navigate} />
 
-            <main className="min-w-0 px-4 py-8 sm:px-6 lg:px-8 xl:px-10">
-              <DocsPageContent
-                page={page}
-                previousPage={previousPage}
-                nextPage={nextPage}
-                onNavigate={navigate}
-              />
-            </main>
+              <main className="min-w-0 px-4 py-8 sm:px-6 lg:px-8 xl:px-10">
+                <DocsPageContent
+                  page={page}
+                  previousPage={previousPage}
+                  nextPage={nextPage}
+                  onNavigate={navigate}
+                />
+              </main>
 
-            <DocsToc page={page} />
-          </div>
+              <DocsToc page={page} />
+            </div>
 
-          <DocsFooter onNavigate={navigate} />
-        </>
-      ) : (
-        <LandingPage onOpenDocs={() => navigate(DEFAULT_PAGE)} />
-      )}
-    </div>
+            <DocsFooter onNavigate={navigate} />
+          </>
+        ) : (
+          <LandingPage onOpenDocs={() => navigate(DEFAULT_PAGE)} />
+        )}
+      </div>
+      <Analytics />
+    </>
   );
 }
 
