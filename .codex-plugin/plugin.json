@@ -1,0 +1,6 @@
+{
+  "name": "codex-kit",
+  "version": "0.1.0",
+  "description": "Reusable Codex skills packaged with Codex Kit.",
+  "skills": "./templates/project/.agents/skills/"
+}

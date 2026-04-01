@@ -1,0 +1,32 @@
+{
+  "name": "@daominhhiep/codex-kit",
+  "version": "0.1.0",
+  "description": "Codex-native starter kit with reusable skills, subagents, workflows, and a project scaffold CLI.",
+  "type": "module",
+  "bin": {
+    "codex-kit": "./bin/codex-kit.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "templates",
+    ".codex-plugin",
+    "scripts",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "codex",
+    "openai",
+    "skills",
+    "agents",
+    "workflows",
+    "cli"
+  ],
+  "license": "MIT"
+}

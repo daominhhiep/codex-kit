@@ -1,0 +1,37 @@
+model = "gpt-5.4"
+model_reasoning_summary = "auto"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[agents]
+max_threads = 6
+max_depth = 1
+
+################################################################################
+# MCP servers
+# Docs:
+# - https://developers.openai.com/codex/mcp
+# - https://developers.openai.com/codex/config-reference
+################################################################################
+[mcp_servers]
+
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
+# For higher rate limits and private repositories, add your API key:
+# http_headers = { "CONTEXT7_API_KEY" = "YOUR_API_KEY" }
+# startup_timeout_sec = 10.0
+# tool_timeout_sec = 60.0
+
+# Example: OpenAI developer docs over Streamable HTTP
+# [mcp_servers.openai_developer_docs]
+# url = "https://developers.openai.com/mcp"
+# startup_timeout_sec = 10.0
+# tool_timeout_sec = 60.0
+
+# Example: local stdio MCP server
+# [mcp_servers.local_docs]
+# command = "docs-server"
+# args = ["--port", "4000"]
+# cwd = "."
+# startup_timeout_sec = 10.0
+# tool_timeout_sec = 60.0
