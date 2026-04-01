@@ -132,6 +132,18 @@ body {
     @apply overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#0d1118] p-4 font-mono text-sm leading-7 text-white/[0.84];
   }
 
+  .docs-figure {
+    @apply overflow-hidden rounded-[24px] border border-white/[0.08] bg-white/[0.02];
+  }
+
+  .docs-figure__image {
+    @apply block w-full;
+  }
+
+  .docs-figure__caption {
+    @apply border-t border-white/[0.08] px-4 py-3 text-sm leading-6 text-white/[0.56] md:px-5;
+  }
+
   .info-card {
     @apply rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5;
   }

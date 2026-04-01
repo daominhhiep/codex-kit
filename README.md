@@ -43,6 +43,16 @@ Initialize into a specific directory:
 npx @daominhhiep/codex-kit init --path ./my-project
 ```
 
+## Use As A Codex Plugin
+
+Codex Kit ships with a local Codex plugin scaffold:
+
+- plugin manifest: `plugins/codex-kit/.codex-plugin/plugin.json`
+- bundled skill: `plugins/codex-kit/skills/codex-kit/SKILL.md`
+- local marketplace support via `.agents/plugins/marketplace.json`
+
+For the full Codex Plugin Directory flow and screenshots, see the `Installation` and `Local Codex Setup` pages in the web docs.
+
 ## Requirements
 
 - Node.js `>=20`
@@ -52,6 +62,9 @@ npx @daominhhiep/codex-kit init --path ./my-project
 ```bash
 codex-kit init
 codex-kit update
+codex-kit install-skills
+codex-kit sync-skills
+codex-kit remove-skills --skills clean-code,planning
 codex-kit status
 ```
 
@@ -61,14 +74,90 @@ codex-kit status
 codex-kit init --path ./my-project
 codex-kit init --force
 codex-kit init --dry-run
+codex-kit init --install-plugin
 codex-kit init --quiet
 
 codex-kit update --path ./my-project
 codex-kit update --force
 codex-kit update --dry-run
+codex-kit update --install-plugin
+
+codex-kit install-skills
+codex-kit install-skills --skills clean-code,planning
+codex-kit install-skills --codex-home ~/.codex
+codex-kit install-skills --force
+codex-kit sync-skills
+codex-kit sync-skills --skills clean-code,planning
+codex-kit remove-skills --skills clean-code,planning
 
 codex-kit status --path ./my-project
 ```
+
+### Auto-install The Plugin In A Workspace
+
+To scaffold the project and make the Codex Kit plugin available in that workspace:
+
+```bash
+npx @daominhhiep/codex-kit init --install-plugin
+```
+
+This copies the Codex plugin into:
+
+```text
+.agents/plugins/codex-kit
+```
+
+and creates or updates:
+
+```text
+.agents/plugins/marketplace.json
+```
+
+with `installation: "INSTALLED_BY_DEFAULT"` so Codex can pick it up for that workspace.
+
+Then install it from the Codex Plugin Directory:
+
+1. Open `Plugins`.
+2. Choose the `Codex Kit Local` marketplace.
+3. Click `+` on `Codex Kit`.
+
+See the web docs `Local Codex Setup` page for the visual walkthrough.
+
+### Install The Kit Skills Into Local Codex
+
+To copy the shipped Codex Kit skill catalog into local Codex:
+
+```bash
+npx @daominhhiep/codex-kit install-skills
+```
+
+By default, this installs into:
+
+```text
+${CODEX_HOME:-~/.codex}/skills
+```
+
+Use `--codex-home` when you want to target a different local Codex directory.
+
+To sync the local copy with the current shipped version:
+
+```bash
+npx @daominhhiep/codex-kit sync-skills
+```
+
+To install, sync, or remove only specific skills:
+
+```bash
+npx @daominhhiep/codex-kit install-skills --skills clean-code,planning
+npx @daominhhiep/codex-kit sync-skills --skills clean-code,planning
+npx @daominhhiep/codex-kit remove-skills --skills clean-code,planning
+```
+
+Notes:
+
+- `install-skills` adds missing skill files and skips existing ones unless you pass `--force`.
+- `sync-skills` overwrites the selected local skills with the current Codex Kit version.
+- `remove-skills` requires `--skills` so you do not accidentally remove the full local catalog.
 
 ## Scaffold Layout
 

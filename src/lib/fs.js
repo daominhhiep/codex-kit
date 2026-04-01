@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export async function walkFiles(rootDir) {
@@ -34,4 +34,8 @@ export async function readText(filePath) {
 export async function writeText(filePath, content) {
   await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, content, "utf8");
+}
+
+export async function removePath(filePath) {
+  await rm(filePath, { recursive: true, force: true });
 }

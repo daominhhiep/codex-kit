@@ -10,7 +10,7 @@
     "bin",
     "src",
     "templates",
-    ".codex-plugin",
+    "plugins",
     "scripts",
     "README.md"
   ],

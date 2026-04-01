@@ -1,20 +1,32 @@
 export type DocBlock =
   | {
-      id: string;
-      title: string;
-      body?: string[];
-      bullets?: string[];
-      code?: string;
-    }
+    id: string;
+    title: string;
+    body?: string[];
+    bullets?: string[];
+    code?: string;
+  }
   | {
-      id: string;
-      title: string;
-      cards: Array<{
-        title: string;
-        description: string;
-        value?: string;
-      }>;
+    id: string;
+    title: string;
+    body?: string[];
+    bullets?: string[];
+    code?: string;
+    image: {
+      src: string;
+      alt: string;
+      caption?: string;
     };
+  }
+  | {
+    id: string;
+    title: string;
+    cards: Array<{
+      title: string;
+      description: string;
+      value?: string;
+    }>;
+  };
 
 export type DocPage = {
   slug: string;
@@ -82,7 +94,7 @@ export const docSections: DocSection[] = [
             id: "how-to-use-docs",
             title: "How To Use The Docs",
             bullets: [
-              "Start with Installation if you are setting up a new repository.",
+              "Start with Installation if you are setting up a new repository, then read Local Codex Setup if you want the plugin or skill catalog available in Codex itself.",
               "Read Agents, Skills, and Workflows to understand how the scaffold thinks about execution.",
               "Use the Guide section when you want examples for planning, implementation, debugging, testing, preview, and deployment.",
               "Use CLI Reference when you need exact commands and flags."
@@ -135,8 +147,79 @@ AGENT_FLOW.md
             bullets: [
               "Use `--force` only when you intentionally want to overwrite managed files.",
               "Use `--dry-run` to inspect changes before writing scaffold files.",
-              "Use `status` and `update` after installation to keep managed files aligned with the current template version."
+              "Use `status` and `update` after installation to keep managed files aligned with the current template version.",
+              "Read `Local Codex Setup` next if you want the plugin or skill catalog installed into Codex."
             ]
+          }
+        ]
+      },
+      {
+        slug: "local-codex-setup",
+        section: "Getting Started",
+        title: "Local Codex Setup",
+        summary: "Install the Codex Kit plugin or skill catalog into local Codex.",
+        intro: [
+          "Use this page after the base project scaffold is in place.",
+          "It covers the two Codex-local integrations: the workspace plugin and the local skill catalog."
+        ],
+        blocks: [
+          {
+            id: "install-plugin",
+            title: "Install The Plugin In Codex",
+            body: [
+              "When you scaffold with `--install-plugin`, Codex Kit copies the plugin into `.agents/plugins/codex-kit` and creates `.agents/plugins/marketplace.json` with `installation: \"INSTALLED_BY_DEFAULT\"`.",
+              "After that, open the `Plugins` view in Codex, choose the `Codex Kit Local` marketplace, and click the `+` button on `Codex Kit`."
+            ],
+            code: `npx @daominhhiep/codex-kit init --install-plugin`,
+            image: {
+              src: "/codex-kit-plugin-install.png",
+              alt: "Codex Plugin Directory showing the Codex Kit Local marketplace and the Codex Kit install card.",
+              caption:
+                "The local marketplace appears in the Plugin Directory after the workspace is scaffolded with `--install-plugin`."
+            }
+          },
+          {
+            id: "plugin-install-steps",
+            title: "Plugin Install Steps",
+            bullets: [
+              "Run `npx @daominhhiep/codex-kit init --install-plugin` in the target repository.",
+              "Restart Codex or reopen the workspace if the local marketplace is not visible yet.",
+              "Open `Plugins` in the left sidebar.",
+              "Switch the marketplace selector to `Codex Kit Local`.",
+              "Find `Codex Kit` under `Developer Tools` and click `+` to install it.",
+              "Start a new thread and invoke it with `@Codex Kit`."
+            ]
+          },
+          {
+            id: "local-skill-install",
+            title: "Install The Kit Skills Into Local Codex",
+            body: [
+              "Use `install-skills` when you want the shipped Codex Kit skill catalog available in local Codex outside a single project workspace.",
+              "By default, Codex Kit installs the skills into `${CODEX_HOME:-~/.codex}/skills`. Use `--codex-home` to override that location."
+            ],
+            code: `npx @daominhhiep/codex-kit install-skills
+
+npx @daominhhiep/codex-kit install-skills --codex-home ~/.codex`,
+            image: {
+              src: "/codex-kit-skill-install.png",
+              alt: "Codex interface showing the installed Codex Kit skills in local Codex.",
+              caption:
+                "Use `install-skills` when you want the Codex Kit skill catalog available in local Codex outside a single workspace."
+            }
+          },
+          {
+            id: "local-skill-maintenance",
+            title: "Sync Or Remove Local Skills",
+            body: [
+              "Use `sync-skills` to overwrite the local Codex copy with the current shipped version from Codex Kit.",
+              "Use `--skills` when you want to install, sync, or remove only specific skill folders instead of the full catalog.",
+              "`remove-skills` requires `--skills` so the CLI does not remove the full local skill catalog by accident."
+            ],
+            code: `npx @daominhhiep/codex-kit sync-skills
+
+npx @daominhhiep/codex-kit install-skills --skills clean-code,planning
+npx @daominhhiep/codex-kit sync-skills --skills clean-code,planning
+npx @daominhhiep/codex-kit remove-skills --skills clean-code,planning`
           }
         ]
       }

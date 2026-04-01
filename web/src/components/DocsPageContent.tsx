@@ -49,6 +49,14 @@ export function DocsPageContent({
                 <code>{block.code}</code>
               </pre>
             )}
+            {"image" in block && block.image && (
+              <figure className="docs-figure mt-5">
+                <img className="docs-figure__image" src={block.image.src} alt={block.image.alt} />
+                {block.image.caption ? (
+                  <figcaption className="docs-figure__caption">{renderInlineCode(block.image.caption)}</figcaption>
+                ) : null}
+              </figure>
+            )}
             {"cards" in block && (
               <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {block.cards.map((card) => (

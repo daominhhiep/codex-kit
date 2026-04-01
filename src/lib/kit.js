@@ -1,13 +1,19 @@
 import path from "node:path";
-import { pathExists, readText, writeText } from "./fs.js";
+import { pathExists, readText, removePath, writeText } from "./fs.js";
 import { sha256 } from "./hash.js";
 import { MANIFEST_PATH, readManifest, writeManifest } from "./manifest.js";
 import { loadTemplateFiles } from "./templates.js";
 
-function buildManifest(version, files) {
+const PLUGIN_NAME = "codex-kit";
+const PLUGIN_TARGET_ROOT = ".agents/plugins/codex-kit";
+const MARKETPLACE_PATH = ".agents/plugins/marketplace.json";
+const LOCAL_SKILLS_TARGET_ROOT = "skills";
+
+function buildManifest(version, files, features = {}) {
   return {
     version,
     managedAt: new Date().toISOString(),
+    features,
     files
   };
 }
@@ -23,14 +29,202 @@ async function getCurrentHash(filePath) {
   return sha256(await readText(filePath));
 }
 
-export async function initProject({
-  targetDir,
-  templateRoot,
-  version,
+function hasPluginFeature(manifest) {
+  return (
+    manifest?.features?.installPlugin === true ||
+    manifest?.files?.some((file) => file.path.startsWith(`${PLUGIN_TARGET_ROOT}/`)) === true
+  );
+}
+
+async function loadManagedTemplates({ templateRoot, pluginRoot, includePlugin = false }) {
+  const templates = await loadTemplateFiles(templateRoot);
+  if (!includePlugin) {
+    return templates;
+  }
+
+  const pluginTemplates = await loadTemplateFiles(pluginRoot);
+  return templates
+    .concat(
+      pluginTemplates.map((template) => ({
+        ...template,
+        relativePath: normalizePath(path.join(PLUGIN_TARGET_ROOT, template.relativePath))
+      }))
+    )
+    .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+}
+
+async function ensurePluginMarketplace({ targetDir, dryRun = false }) {
+  const marketplacePath = path.join(targetDir, MARKETPLACE_PATH);
+  const pluginEntry = {
+    name: PLUGIN_NAME,
+    source: {
+      source: "local",
+      path: `./${PLUGIN_TARGET_ROOT}`
+    },
+    policy: {
+      installation: "INSTALLED_BY_DEFAULT",
+      authentication: "ON_INSTALL"
+    },
+    category: "Developer Tools"
+  };
+
+  let marketplace = {
+    name: "local-plugins",
+    interface: {
+      displayName: "Local Plugins"
+    },
+    plugins: []
+  };
+
+  if (await pathExists(marketplacePath)) {
+    marketplace = JSON.parse(await readText(marketplacePath));
+  }
+
+  const plugins = Array.isArray(marketplace.plugins) ? marketplace.plugins : [];
+  const existingIndex = plugins.findIndex((plugin) => plugin?.name === PLUGIN_NAME);
+
+  if (existingIndex === -1) {
+    plugins.push(pluginEntry);
+  } else {
+    plugins[existingIndex] = {
+      ...plugins[existingIndex],
+      ...pluginEntry
+    };
+  }
+
+  marketplace = {
+    name: marketplace.name || "local-plugins",
+    interface: {
+      displayName: marketplace.interface?.displayName || "Local Plugins"
+    },
+    ...marketplace,
+    plugins
+  };
+
+  if (!dryRun) {
+    await writeText(marketplacePath, JSON.stringify(marketplace, null, 2) + "\n");
+  }
+}
+
+function normalizeSkillSelection(skills) {
+  if (!skills || skills.length === 0) {
+    return null;
+  }
+
+  return new Set(
+    skills
+      .map((skill) => skill.trim())
+      .filter(Boolean)
+      .map((skill) => skill.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "").split("/")[0])
+  );
+}
+
+async function loadSelectedSkillTemplates({ skillsRoot, skills }) {
+  const templates = await loadTemplateFiles(skillsRoot);
+  const selectedSkills = normalizeSkillSelection(skills);
+  if (!selectedSkills) {
+    return templates;
+  }
+
+  return templates.filter((template) => selectedSkills.has(normalizePath(template.relativePath).split("/")[0]));
+}
+
+export async function installLocalSkills({
+  skillsRoot,
+  codexHome,
+  skills,
   force = false,
   dryRun = false
 }) {
-  const templates = await loadTemplateFiles(templateRoot);
+  const targetDir = path.join(codexHome, LOCAL_SKILLS_TARGET_ROOT);
+  const templates = await loadSelectedSkillTemplates({ skillsRoot, skills });
+  const written = [];
+  const skipped = [];
+
+  for (const template of templates) {
+    const destination = path.join(targetDir, template.relativePath);
+    const exists = await pathExists(destination);
+
+    if (exists && !force) {
+      skipped.push(normalizePath(path.join(LOCAL_SKILLS_TARGET_ROOT, template.relativePath)));
+      continue;
+    }
+
+    if (!dryRun) {
+      await writeText(destination, template.content);
+    }
+
+    written.push(normalizePath(path.join(LOCAL_SKILLS_TARGET_ROOT, template.relativePath)));
+  }
+
+  return {
+    targetDir,
+    written,
+    skipped
+  };
+}
+
+export async function syncLocalSkills({
+  skillsRoot,
+  codexHome,
+  skills,
+  dryRun = false
+}) {
+  return installLocalSkills({
+    skillsRoot,
+    codexHome,
+    skills,
+    force: true,
+    dryRun
+  });
+}
+
+export async function removeLocalSkills({
+  codexHome,
+  skills,
+  dryRun = false
+}) {
+  const targetDir = path.join(codexHome, LOCAL_SKILLS_TARGET_ROOT);
+  const selectedSkills = normalizeSkillSelection(skills);
+  const removableSkills = selectedSkills ? Array.from(selectedSkills).sort() : [];
+  const removed = [];
+  const skipped = [];
+
+  for (const skill of removableSkills) {
+    const destination = path.join(targetDir, skill);
+    if (!(await pathExists(destination))) {
+      skipped.push(normalizePath(path.join(LOCAL_SKILLS_TARGET_ROOT, skill)));
+      continue;
+    }
+
+    if (!dryRun) {
+      await removePath(destination);
+    }
+
+    removed.push(normalizePath(path.join(LOCAL_SKILLS_TARGET_ROOT, skill)));
+  }
+
+  return {
+    targetDir,
+    removed,
+    skipped
+  };
+}
+
+export async function initProject({
+  targetDir,
+  templateRoot,
+  pluginRoot,
+  version,
+  installPlugin = false,
+  force = false,
+  dryRun = false
+}) {
+  const templates = await loadManagedTemplates({
+    templateRoot,
+    pluginRoot,
+    includePlugin: installPlugin
+  });
   const written = [];
   const skipped = [];
   const manifestFiles = [];
@@ -62,16 +256,25 @@ export async function initProject({
   }
 
   if (!dryRun) {
-    await writeManifest(targetDir, buildManifest(version, manifestFiles));
+    await writeManifest(
+      targetDir,
+      buildManifest(version, manifestFiles, { installPlugin })
+    );
   }
 
-  return { written, skipped };
+  if (installPlugin) {
+    await ensurePluginMarketplace({ targetDir, dryRun });
+  }
+
+  return { written, skipped, pluginInstalled: installPlugin };
 }
 
 export async function updateProject({
   targetDir,
   templateRoot,
+  pluginRoot,
   version,
+  installPlugin = false,
   force = false,
   dryRun = false
 }) {
@@ -81,7 +284,12 @@ export async function updateProject({
   }
 
   const manifestByPath = new Map(existingManifest.files.map((file) => [file.path, file]));
-  const templates = await loadTemplateFiles(templateRoot);
+  const includePlugin = installPlugin || hasPluginFeature(existingManifest);
+  const templates = await loadManagedTemplates({
+    templateRoot,
+    pluginRoot,
+    includePlugin
+  });
   const written = [];
   const skipped = [];
   const nextManifestFiles = [];
@@ -120,15 +328,26 @@ export async function updateProject({
   }
 
   if (!dryRun) {
-    await writeManifest(targetDir, buildManifest(version, nextManifestFiles));
+    await writeManifest(
+      targetDir,
+      buildManifest(version, nextManifestFiles, { installPlugin: includePlugin })
+    );
   }
 
-  return { written, skipped };
+  if (includePlugin) {
+    await ensurePluginMarketplace({ targetDir, dryRun });
+  }
+
+  return { written, skipped, pluginInstalled: includePlugin };
 }
 
-export async function statusProject({ targetDir, templateRoot, version }) {
+export async function statusProject({ targetDir, templateRoot, pluginRoot, version }) {
   const manifest = await readManifest(targetDir);
-  const templates = await loadTemplateFiles(templateRoot);
+  const templates = await loadManagedTemplates({
+    templateRoot,
+    pluginRoot,
+    includePlugin: hasPluginFeature(manifest)
+  });
   const templateByPath = new Map(
     templates.map((template) => [normalizePath(template.relativePath), template])
   );
@@ -137,6 +356,7 @@ export async function statusProject({ targetDir, templateRoot, version }) {
     return {
       version,
       managedCount: templates.length,
+      pluginInstalled: false,
       missing: templates.map((template) => normalizePath(template.relativePath)),
       modified: [],
       outdated: []
@@ -166,6 +386,7 @@ export async function statusProject({ targetDir, templateRoot, version }) {
   return {
     version: manifest.version || version,
     managedCount: manifest.files.length,
+    pluginInstalled: hasPluginFeature(manifest),
     missing,
     modified,
     outdated
