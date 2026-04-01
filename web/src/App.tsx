@@ -6,6 +6,7 @@ import { DocsPageContent } from "./components/DocsPageContent";
 import { DocsSidebar } from "./components/DocsSidebar";
 import { DocsToc } from "./components/DocsToc";
 import { LandingPage } from "./components/LandingPage";
+import { applySeo } from "./seo";
 import {
   DEFAULT_PAGE,
   filterSections,
@@ -41,6 +42,10 @@ function App() {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     }
   }, [route.view, page.slug]);
+
+  useEffect(() => {
+    applySeo(route, page);
+  }, [page, route]);
 
   const navigate = (nextSlug: string) => navigateToDoc(nextSlug);
   const isDocsView = route.view === "docs";
