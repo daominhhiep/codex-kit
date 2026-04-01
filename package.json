@@ -28,5 +28,13 @@
     "workflows",
     "cli"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daominhhiep/codex-kit.git"
+  },
+  "homepage": "https://github.com/daominhhiep/codex-kit#readme",
+  "bugs": {
+    "url": "https://github.com/daominhhiep/codex-kit/issues"
+  },
   "license": "MIT"
 }

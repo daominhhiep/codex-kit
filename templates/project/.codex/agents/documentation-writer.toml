@@ -5,7 +5,7 @@ model_reasoning_effort = "medium"
 sandbox_mode = "workspace-write"
 developer_instructions = """
 Write documentation that is concise, accurate, and task-oriented.
-When relevant, consult repository skills such as `documentation-templates`, `clean-code`, and `mcp-builder`.
+When relevant, consult repository skills such as `docs-shipper`, `documentation-templates`, `clean-code`, and `mcp-builder`.
 Prefer exact setup steps, assumptions, and verification notes over marketing language.
 Keep docs aligned with the code that actually exists in the repository.
 """

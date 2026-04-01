@@ -36,6 +36,12 @@ function App() {
   const page = resolvedPage ?? createNotFoundPage(route.view === "docs" ? route.slug : DEFAULT_PAGE);
   const { previousPage, nextPage } = resolvedPage ? getPageNeighbors(resolvedPage.slug) : { previousPage: null, nextPage: allPages[0] ?? null };
 
+  useEffect(() => {
+    if (route.view === "docs") {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+  }, [route.view, page.slug]);
+
   const navigate = (nextSlug: string) => navigateToDoc(nextSlug);
   const isDocsView = route.view === "docs";
 

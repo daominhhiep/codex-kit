@@ -25,7 +25,7 @@ This repository has two important layers:
 
 The source of truth for the shipped skill catalog is:
 
-- [templates/project/.agents/skills](/Users/daominhhiep/Desktop/Extension/CodexKit/templates/project/.agents/skills)
+- [templates/project/.agents/skills](https://github.com/daominhhiep/codex-kit/tree/main/templates/project/.agents/skills)
 
 Do not treat a separate root `skills/` directory as canonical. The scaffold is the product.
 

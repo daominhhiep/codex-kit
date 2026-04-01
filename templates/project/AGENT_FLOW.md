@@ -59,15 +59,18 @@ After workflow selection, load only the skills that improve the current task.
 Examples:
 
 - `planning` for decomposition and sequencing
+- `repo-onboarding` for first-pass repository mapping
+- `bug-hunt` for reproduction-led debugging
 - `debugging` for reproduction and evidence gathering
 - `clean-code` for scoped implementation quality
 - `frontend-design` for UI-heavy work
 - `tailwind-patterns` for Tailwind-first implementation details
 - `nextjs-react-expert` for React or Next.js UI performance concerns
 - `api-patterns` or `database-design` for server-side structure changes
-- `testing-patterns` or `tdd-workflow` for focused validation
-- `code-review` for review passes
-- `documentation-templates` or `mcp-builder` for docs or protocol-heavy work
+- `test-hardening`, `testing-patterns`, or `tdd-workflow` for focused validation
+- `high-signal-review` or `code-review` for review passes
+- `docs-shipper`, `documentation-templates`, or `mcp-builder` for docs or protocol-heavy work
+- `mcp-onboarding` for MCP evaluation and rollout decisions
 - `release-readiness` for rollout-sensitive work
 
 The default rule is minimal loading. Do not load broad stacks of skills without evidence they are needed.
@@ -79,6 +82,7 @@ Use a subagent only when it sharpens the role:
 | Need | Subagent |
 | --- | --- |
 | task decomposition | `planner` |
+| repository first-pass map | `explorer` |
 | implementation after scope is clear | `implementer` |
 | failure isolation | `debugger` |
 | patch review | `reviewer` |
@@ -97,6 +101,7 @@ During execution:
 - do not run risky scripts or destructive commands without explicit approval
 
 If a skill includes helper scripts, they are optional and should be proposed, not silently executed.
+If a skill includes `verify.md`, `handoff.md`, or a checklist file, use it as the output contract for that task shape.
 
 ## 6. Validation Layer
 

@@ -40,18 +40,18 @@ export const docSections: DocSection[] = [
         slug: "introduction",
         section: "Getting Started",
         title: "Introduction",
-        summary: "Welcome to the Codex Kit documentation.",
+        summary: "What Codex Kit is, what it installs, and how to read the docs.",
         intro: [
-          "Codex Kit is a Codex-native starter kit for teams that want a reusable project scaffold with routing rules, a shipped skill catalog, workflow playbooks, focused subagents, MCP-ready config, and managed file tracking.",
-          "The goal is to make `codex-kit init` produce a repository that Codex can use immediately without every team having to rebuild the same operating structure from scratch."
+          "Codex Kit is a starter scaffold for repositories that want to work well with Codex from day one.",
+          "It installs routing docs, a shipped skill catalog, workflow playbooks, focused subagents, project-scoped MCP config, and managed file tracking so teams do not have to rebuild the same operating layer in every repo."
         ],
         blocks: [
           {
             id: "what-is-codex-kit",
             title: "What Is Codex Kit?",
             body: [
-              "Codex Kit packages the repo-level control documents and catalogs that teach Codex how to classify tasks, choose workflows, load the right skills, and validate work at the right depth.",
-              "The scaffold is the product. The source of truth for the shipped skill catalog lives in `templates/project/.agents/skills`, not in a separate ad hoc root folder."
+              "At its core, Codex Kit is a repo structure that helps Codex decide what kind of task it is looking at, which workflow fits, which skills matter, and how much validation is appropriate before handoff.",
+              "The scaffold itself is the product. The shipped skill catalog lives in `templates/project/.agents/skills`, and that directory should be treated as the source of truth."
             ]
           },
           {
@@ -83,9 +83,9 @@ export const docSections: DocSection[] = [
             title: "How To Use The Docs",
             bullets: [
               "Start with Installation if you are setting up a new repository.",
-              "Read Agents, Skills, and Workflows to understand the operating model inside the scaffold.",
-              "Use the Guide section when you want concrete patterns for planning, implementation, debugging, testing, orchestration, preview, and deployment.",
-              "Use CLI Reference when you need exact commands, flags, or scaffold behavior."
+              "Read Agents, Skills, and Workflows to understand how the scaffold thinks about execution.",
+              "Use the Guide section when you want examples for planning, implementation, debugging, testing, preview, and deployment.",
+              "Use CLI Reference when you need exact commands and flags."
             ]
           }
         ]
@@ -94,10 +94,10 @@ export const docSections: DocSection[] = [
         slug: "installation",
         section: "Getting Started",
         title: "Installation",
-        summary: "Install Codex Kit and scaffold a Codex-ready repository.",
+        summary: "Install the CLI and scaffold a repository that is ready for Codex.",
         intro: [
-          "Codex Kit ships as a CLI package published under `@daominhhiep/codex-kit`.",
-          "You can run it directly with `npx` or install it globally and then initialize a repository in place or into a target directory."
+          "Codex Kit is published as `@daominhhiep/codex-kit`.",
+          "You can run it with `npx`, install it globally, or point it at a target directory when you want to scaffold into a new folder."
         ],
         blocks: [
           {
@@ -149,10 +149,10 @@ AGENT_FLOW.md
         slug: "agents",
         section: "Core Concepts",
         title: "Agents",
-        summary: "Focused subagents for bounded roles inside Codex Kit.",
+        summary: "Focused subagents with narrow responsibilities.",
         intro: [
-          "Subagents live in `.codex/agents/*.toml` and are meant to stay specialized enough that routing is predictable.",
-          "The scaffold separates role definitions from knowledge modules and process playbooks: agents own execution roles, skills own knowledge, and workflows own process."
+          "Subagents live in `.codex/agents/*.toml` and are intentionally narrow so routing stays predictable.",
+          "Codex Kit keeps responsibilities separate: agents own execution roles, skills own knowledge, and workflows own process."
         ],
         blocks: [
           {
@@ -160,9 +160,9 @@ AGENT_FLOW.md
             title: "Agent Design Principles",
             bullets: [
               "Use focused subagents for bounded work instead of one broad parallel swarm.",
-              "Prefer the narrowest agent that matches the current task.",
-              "Do not assume an agent will infer the right skill set from its name alone; route skills explicitly when needed.",
-              "Avoid unnecessary parallelism when the task is still on the critical path."
+              "Prefer the narrowest agent that still matches the task.",
+              "Pass skills explicitly when they matter instead of assuming the agent name is enough.",
+              "Avoid parallelism when the result is needed immediately on the critical path."
             ]
           },
           {
@@ -211,10 +211,10 @@ AGENT_FLOW.md
         slug: "skills",
         section: "Core Concepts",
         title: "Skills",
-        summary: "Reusable knowledge modules in Codex `SKILL.md` format.",
+        summary: "Reusable knowledge modules written in Codex `SKILL.md` format.",
         intro: [
           "Skills live in `.agents/skills/<name>/SKILL.md` and should stay narrow, explicit, and reusable across repositories.",
-          "A skill can optionally include `references/`, `scripts/`, and `assets/`, but it should not act like hidden automation."
+          "A skill can include `references/`, `scripts/`, and `assets/`, but it should never behave like hidden automation."
         ],
         blocks: [
           {
@@ -252,8 +252,8 @@ AGENT_FLOW.md
             id: "minimal-loading",
             title: "Minimal Loading Rule",
             body: [
-              "The default rule in Codex Kit is minimal loading. Do not load a broad stack of skills without evidence they are needed for the current task.",
-              "Choose the narrowest workflow first, then add only the skills that materially improve the work."
+              "The default rule is simple: load as little as you can while still doing good work.",
+              "Choose the workflow first, then add only the skills that meaningfully improve the current task."
             ]
           }
         ]
@@ -262,18 +262,18 @@ AGENT_FLOW.md
         slug: "workflows",
         section: "Core Concepts",
         title: "Workflows",
-        summary: "Process playbooks for common task shapes.",
+        summary: "Process playbooks for common task types.",
         intro: [
-          "Workflows live in `.agents/workflows/*.md` and define repeatable playbooks for common task types such as brainstorming, planning, creation, debugging, review, testing, validation, deployment, orchestration, preview, and status.",
-          "Workflows encode process, not domain knowledge."
+          "Workflows live in `.agents/workflows/*.md` and describe repeatable ways to approach common tasks such as planning, implementation, debugging, review, testing, preview, and deployment.",
+          "They encode process, not domain knowledge."
         ],
         blocks: [
           {
             id: "workflow-selection",
             title: "Workflow Selection",
             body: [
-              "Classification should happen before loading extra skills or spawning subagents.",
-              "Once the primary mode is clear, route to the narrowest workflow that matches the request."
+              "Classify the request before loading extra skills or spawning subagents.",
+              "Once the task shape is clear, choose the narrowest workflow that matches it."
             ]
           },
           {
@@ -316,10 +316,10 @@ verify`
         slug: "structured-brainstorming",
         section: "Guide",
         title: "Structured Brainstorming",
-        summary: "Use brainstorming when the task is still ambiguous.",
+        summary: "Use `brainstorm` when the request is still open-ended.",
         intro: [
-          "The `brainstorm` workflow exists for vague feature requests, strategy questions, and architecture exploration.",
-          "Its job is to reduce ambiguity before implementation, not to produce code."
+          "The `brainstorm` workflow is for vague feature requests, strategy questions, and architecture exploration.",
+          "Its job is to reduce ambiguity before implementation, not to start writing code too early."
         ],
         blocks: [
           {
@@ -347,10 +347,10 @@ verify`
         slug: "project-planning",
         section: "Guide",
         title: "Project Planning",
-        summary: "Use planning to produce an execution-ready plan before code changes.",
+        summary: "Use `plan` when you want an execution-ready plan before code changes.",
         intro: [
-          "The `plan` workflow is for tasks where the user wants a decision-complete implementation plan before changes land.",
-          "A good plan is grounded in the real repository, ordered by dependency, and explicit about risk and validation."
+          "The `plan` workflow is for tasks where the user wants the shape of the work decided before implementation begins.",
+          "A good plan is grounded in the real repository, ordered by dependency, and explicit about risks and validation."
         ],
         blocks: [
           {
@@ -370,10 +370,10 @@ verify`
         slug: "create-new-application",
         section: "Guide",
         title: "Create New Application",
-        summary: "Use the create workflow for new features, scaffolding, or structured implementation work.",
+        summary: "Use `create` for new features, scaffolding, and other structured implementation work.",
         intro: [
-          "The `create` workflow turns a concrete request into a minimal defensible implementation.",
-          "If the request is still ambiguous, move back to `brainstorm` or `plan` first."
+          "The `create` workflow turns a concrete request into the smallest defensible implementation that solves the problem.",
+          "If the request is still fuzzy, step back to `brainstorm` or `plan` first."
         ],
         blocks: [
           {
@@ -402,10 +402,10 @@ verify`
         slug: "add-a-new-feature",
         section: "Guide",
         title: "Add A New Feature",
-        summary: "A practical pattern for extending an existing codebase.",
+        summary: "A practical pattern for extending an existing codebase without drifting scope.",
         intro: [
-          "For iterative change inside an existing repository, use the `enhance` or `create` workflow depending on how net-new the behavior is.",
-          "The guiding rule is to keep the change scoped to the confirmed problem and avoid silent policy invention."
+          "For iterative work inside an existing repository, use `enhance` or `create` depending on how new the behavior really is.",
+          "The key rule is to keep the change scoped to the confirmed problem and avoid silently inventing new product policy."
         ],
         blocks: [
           {
@@ -425,10 +425,10 @@ verify`
         slug: "advanced-ui-design",
         section: "Guide",
         title: "Advanced UI Design",
-        summary: "Use the shared UI/UX Pro Max workflow for design-direction work.",
+        summary: "Use `ui-ux-pro-max` for design direction and implementation-aware UI work.",
         intro: [
-          "The `ui-ux-pro-max` workflow is for UI planning, visual redesigns, and implementation-oriented UX decisions.",
-          "It is backed by the shared package at `.agents/.shared/ui-ux-pro-max/`."
+          "The `ui-ux-pro-max` workflow is for UI planning, redesign work, and implementation-aware UX decisions.",
+          "It is backed by the shared package in `.agents/.shared/ui-ux-pro-max/`."
         ],
         blocks: [
           {
@@ -455,7 +455,7 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --doma
         slug: "systematic-debugging",
         section: "Guide",
         title: "Systematic Debugging",
-        summary: "Move from symptom to confirmed failure mode before code changes.",
+        summary: "Move from symptom to confirmed failure mode before changing code.",
         intro: [
           "The `debug` workflow exists for failures, regressions, and unclear runtime behavior.",
           "Its key rule is simple: do not jump straight to code changes."
@@ -480,8 +480,8 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --doma
         title: "Test Generation",
         summary: "Add or run the smallest useful test scope with clear reporting.",
         intro: [
-          "The `test` workflow is for targeted test creation, execution, or coverage-driven validation.",
-          "It should prove behavior with the smallest useful set of tests rather than broad rewrites."
+          "The `test` workflow is for targeted test creation, test execution, and coverage-driven validation.",
+          "It should prove behavior with the smallest useful set of tests instead of broad rewrites."
         ],
         blocks: [
           {
@@ -512,7 +512,7 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --doma
         summary: "Start, restart, or verify a local preview server with minimal confusion.",
         intro: [
           "The `preview` workflow focuses on local preview startup, health checks, and developer-facing verification.",
-          "It should make it easy to get from source changes to a working local URL."
+          "It should make it easy to go from source changes to a working local URL."
         ],
         blocks: [
           {
@@ -534,7 +534,7 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --doma
         title: "Project Status",
         summary: "Summarize repository state, active work, and validation status.",
         intro: [
-          "The `status` workflow answers where the repository is now without requiring someone to reread the entire project.",
+          "The `status` workflow answers where the repository stands right now without making someone reread the whole project.",
           "It should summarize changed areas, validation state, blockers, and the next practical action."
         ],
         blocks: [
@@ -555,10 +555,10 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --doma
         slug: "multi-agent-orchestration",
         section: "Guide",
         title: "Multi-Agent Orchestration",
-        summary: "Coordinate bounded subagent work without losing a coherent main-thread plan.",
+        summary: "Coordinate bounded subagent work without losing the main-thread plan.",
         intro: [
           "Use the `orchestrate` workflow only when the task genuinely benefits from multiple focused subagents.",
-          "Parallelism should exist to unblock independent workstreams, not because the task simply feels large."
+          "Parallelism should exist to unblock independent workstreams, not just because the task feels big."
         ],
         blocks: [
           {
@@ -578,7 +578,7 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --doma
         slug: "production-deployment",
         section: "Guide",
         title: "Production Deployment",
-        summary: "Move from ready code to safe enough deployment with pre-flight checks and rollback awareness.",
+        summary: "Move from ready code to a safe deployment with pre-flight checks and rollback awareness.",
         intro: [
           "The `deploy` workflow is for staging or production deployment preparation and execution.",
           "It should confirm environment targets, validation depth, secrets, packaging, smoke checks, and rollback paths."
@@ -617,9 +617,9 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --doma
         slug: "commands-and-options",
         section: "CLI Reference",
         title: "Commands & Options",
-        summary: "Exact commands and flags exposed by the Codex Kit CLI.",
+        summary: "The commands and flags exposed by the Codex Kit CLI.",
         intro: [
-          "Codex Kit ships a small command surface designed around initialization, managed updates, and scaffold status.",
+          "Codex Kit keeps the CLI surface intentionally small: initialize the scaffold, update managed files, and inspect status.",
           "The CLI entrypoint is exposed through the `codex-kit` binary."
         ],
         blocks: [
@@ -647,8 +647,8 @@ codex-kit status --path ./my-project`
             id: "managed-files",
             title: "Managed File Behavior",
             body: [
-              "The `.codex-kit/manifest.json` file tracks path, template hash, installed hash, and install version for kit-managed files.",
-              "This powers `status`, safe `update`, and detection of missing or locally modified managed files."
+              "The `.codex-kit/manifest.json` file tracks the path, template hash, installed hash, and install version for kit-managed files.",
+              "That data powers `status`, safe `update`, and detection of missing or locally modified managed files."
             ]
           }
         ]

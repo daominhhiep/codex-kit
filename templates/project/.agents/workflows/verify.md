@@ -6,6 +6,13 @@ Use this workflow for release-sensitive or cross-cutting changes.
 
 Establish higher confidence than `check` for changes that are broad, risky, or close to release.
 
+## Recommended Skill Bundles
+
+- `test-hardening` when validation depends on stronger automated proof
+- `docs-shipper` when the change must ship with accurate operational docs
+- `mcp-onboarding` when rollout depends on an external MCP server
+- `release-readiness` for cross-cutting release risk
+
 ## Default Checks
 
 1. Run broader automated coverage than `check`.
@@ -31,3 +38,4 @@ Establish higher confidence than `check` for changes that are broad, risky, or c
 - broader validation run
 - release blockers or warnings
 - explicit note on anything still unverified
+- if a specialized skill bundle was used, include the relevant verification notes from that bundle

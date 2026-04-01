@@ -6,6 +6,13 @@ Use this workflow for patch review, branch review, or design review.
 
 Identify the highest-signal risks before code is merged or relied on.
 
+## Recommended Skill Bundle
+
+- `high-signal-review` for findings-first output
+- `code-review` for the base review contract
+- `code-review-checklist` for supplemental prompts
+- `release-readiness` when migration or rollout risk is involved
+
 ## Process
 
 1. Map the affected code paths first.
@@ -33,3 +40,4 @@ Lead with issues, ordered by severity:
 - avoid style-only feedback unless it hides a real bug or maintenance risk
 - do not bury material findings under summaries
 - if the review scope is unclear, define it first
+- use the output check in `high-signal-review/verify.md` before closing a review

@@ -22,6 +22,7 @@ When delegating to a subagent, include the preferred skill set in the task hando
 - Use `.agents/workflows/plan.md` when the user wants a task breakdown before code changes.
 - Prefer the `planner` subagent for decomposition, success criteria, and sequencing.
 - Prefer the `explorer` subagent when repository mapping or dependency tracing is the immediate need.
+- Load `repo-onboarding` when entering an unfamiliar repository and a fast, reliable codebase map is needed first.
 
 ### Implementation
 
@@ -41,10 +42,10 @@ When delegating to a subagent, include the preferred skill set in the task hando
 
 - Use `.agents/workflows/debug.md` for bug investigation and root-cause isolation.
 - Prefer the `debugger` subagent for evidence gathering before making changes.
-- Load `debugging`, `systematic-debugging`, and optionally `testing-patterns` to confirm the failure mode.
+- Load `bug-hunt`, `debugging`, `systematic-debugging`, and optionally `testing-patterns` to confirm the failure mode.
   Preferred pairings:
-  `debugger` -> `debugging`, `systematic-debugging`, `testing-patterns`
-  `explorer` -> `architecture`, `plan-writing`, `systematic-debugging`
+  `debugger` -> `bug-hunt`, `debugging`, `systematic-debugging`, `testing-patterns`
+  `explorer` -> `repo-onboarding`, `architecture`, `plan-writing`, `systematic-debugging`
 
 ### Review and Documentation
 
@@ -52,13 +53,13 @@ When delegating to a subagent, include the preferred skill set in the task hando
 - Use the `reviewer` subagent for correctness, security, and missing tests.
 - Use the `docs_researcher` subagent when framework or API behavior must be verified.
 - Use `security_auditor`, `documentation_writer`, `performance_optimizer`, or `seo_specialist` when the task has a specialized review or improvement axis.
-- Load `code-review`, `code-review-checklist`, `documentation-templates`, or `mcp-builder` as needed.
+- Load `high-signal-review`, `code-review`, `code-review-checklist`, `docs-shipper`, `documentation-templates`, `mcp-onboarding`, or `mcp-builder` as needed.
   Preferred pairings:
-  `reviewer` -> `code-review`, `code-review-checklist`, `release-readiness`
+  `reviewer` -> `high-signal-review`, `code-review`, `code-review-checklist`, `release-readiness`
   `security_auditor` -> `vulnerability-scanner`, `red-team-tactics`, `api-patterns`
   `performance_optimizer` -> `performance-profiling`, `nextjs-react-expert`
-  `documentation_writer` -> `documentation-templates`
-  `docs_researcher` -> `documentation-templates`, `mcp-builder`
+  `documentation_writer` -> `docs-shipper`, `documentation-templates`
+  `docs_researcher` -> `mcp-onboarding`, `documentation-templates`, `mcp-builder`
   `seo_specialist` -> `seo-fundamentals`, `geo-fundamentals`, `web-design-guidelines`
 
 ### Validation and Release
@@ -69,9 +70,9 @@ When delegating to a subagent, include the preferred skill set in the task hando
 - Use `.agents/workflows/deploy.md` for deployment preparation or execution.
 - Use `.agents/workflows/ship.md` when preparing a merge, release, or deployment summary.
 - Use `devops_engineer` for CI, environment, and deployment-specific work.
-- Load `release-readiness` when the task affects rollout, migrations, or deploy risk.
+- Load `test-hardening`, `docs-shipper`, `mcp-onboarding`, and `release-readiness` when the task affects rollout, migrations, verification depth, or deploy risk.
   Preferred pairings:
-  `test_writer` -> `testing-patterns`, `tdd-workflow`, `webapp-testing`
+  `test_writer` -> `test-hardening`, `testing-patterns`, `tdd-workflow`, `webapp-testing`
   `devops_engineer` -> `deployment-procedures`, `server-management`, `release-readiness`, `bash-linux`
 
 ## Subagent Matrix
@@ -79,27 +80,29 @@ When delegating to a subagent, include the preferred skill set in the task hando
 | Agent | Purpose | Default Mode | Typical Skills |
 | --- | --- | --- | --- |
 | `planner` | Break work into decisions, steps, and risks | read-heavy | `planning`, `plan-writing`, `architecture` |
-| `explorer` | Map unfamiliar code paths and dependency flow | read-only | `architecture`, `plan-writing`, `systematic-debugging` |
+| `explorer` | Map unfamiliar code paths and dependency flow | read-only | `repo-onboarding`, `architecture`, `plan-writing`, `systematic-debugging` |
 | `implementer` | Make the smallest defensible code change | workspace-write | `clean-code`, `frontend-design`, `api-patterns`, `database-design` |
 | `frontend_specialist` | Build or refactor frontend UI and interaction layers | workspace-write | `frontend-design`, `nextjs-react-expert`, `tailwind-patterns` |
 | `backend_specialist` | Implement APIs, services, and server-side logic | workspace-write | `api-patterns`, `nodejs-best-practices`, `python-patterns` |
 | `database_architect` | Design schemas, migrations, and query strategy | workspace-write | `database-design` |
 | `mobile_developer` | Build mobile-specific UX and application flows | workspace-write | `mobile-design` |
-| `debugger` | Reproduce issues and isolate the failure mode | read-heavy first | `debugging`, `systematic-debugging`, `testing-patterns` |
+| `debugger` | Reproduce issues and isolate the failure mode | read-heavy first | `bug-hunt`, `debugging`, `systematic-debugging`, `testing-patterns` |
 | `performance_optimizer` | Improve measured bottlenecks and runtime speed | workspace-write | `performance-profiling`, `nextjs-react-expert` |
-| `reviewer` | Find correctness, security, and regression risks | read-only | `code-review`, `release-readiness` |
+| `reviewer` | Find correctness, security, and regression risks | read-only | `high-signal-review`, `code-review`, `release-readiness` |
 | `security_auditor` | Review exploitability, auth, and risky code paths | read-only | `vulnerability-scanner`, `red-team-tactics`, `api-patterns` |
-| `docs_researcher` | Verify external APIs and framework behavior | read-only | `documentation-templates`, `mcp-builder` |
-| `documentation_writer` | Write setup guides and technical handoff docs | workspace-write | `documentation-templates` |
+| `docs_researcher` | Verify external APIs and framework behavior | read-only | `mcp-onboarding`, `documentation-templates`, `mcp-builder` |
+| `documentation_writer` | Write setup guides and technical handoff docs | workspace-write | `docs-shipper`, `documentation-templates` |
 | `seo_specialist` | Improve SEO, GEO, and content discoverability | workspace-write | `seo-fundamentals`, `geo-fundamentals` |
 | `devops_engineer` | Own CI, deploy, env, and operational changes | workspace-write | `deployment-procedures`, `server-management`, `release-readiness` |
-| `test_writer` | Add or improve tests around known behavior | workspace-write | `testing-patterns`, `tdd-workflow`, `webapp-testing` |
+| `test_writer` | Add or improve tests around known behavior | workspace-write | `test-hardening`, `testing-patterns`, `tdd-workflow`, `webapp-testing` |
 
 ## Skill Contract
 
 Each skill may include:
 
 - `SKILL.md` for the instruction contract
+- `agents/openai.yaml` for invocation policy when the skill bundles deeper guidance
+- task-specific files such as `verify.md`, `handoff.md`, or checklists for specialized proof
 - `references/` for templates and deeper guidance
 - `scripts/` for optional helpers
 - `assets/` for supporting files

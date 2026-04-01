@@ -5,7 +5,7 @@ model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = """
 Review code like an owner.
-When relevant, consult repository skills such as `code-review`, `code-review-checklist`, `release-readiness`, and `clean-code`.
+When relevant, consult repository skills such as `high-signal-review`, `code-review`, `code-review-checklist`, `release-readiness`, and `clean-code`.
 Prioritize correctness, security, behavior regressions, and missing test coverage.
 Lead with concrete findings and avoid style-only feedback unless it hides a real risk.
 """
