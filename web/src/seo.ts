@@ -1,4 +1,4 @@
-import type { AppRoute } from "./docs/navigation";
+import { DEFAULT_PAGE, getRoutePath, type AppRoute } from "./docs/navigation";
 import type { DocPage } from "./content";
 
 const siteName = "Codex Kit";
@@ -10,7 +10,7 @@ const defaultKeywords =
   "Codex Kit, AI agent toolkit, Codex scaffold, AI workflow, Codex skills, Codex plugins";
 const defaultImage = `${siteUrl}/codex-kit-plugin-install.png`;
 
-type SeoPayload = {
+export type SeoPayload = {
   title: string;
   description: string;
   keywords: string;
@@ -21,7 +21,7 @@ type SeoPayload = {
 };
 
 export function applySeo(route: AppRoute, page: DocPage) {
-  const payload = route.view === "docs" ? getDocsSeo(page) : getLandingSeo();
+  const payload = getSeoPayload(route, page);
 
   document.documentElement.lang = "en";
   document.title = payload.title;
@@ -43,6 +43,10 @@ export function applySeo(route: AppRoute, page: DocPage) {
 
   setLinkTag("canonical", payload.url);
   setJsonLd(payload.schema);
+}
+
+export function getSeoPayload(route: AppRoute, page: DocPage): SeoPayload {
+  return route.view === "docs" ? getDocsSeo(page) : getLandingSeo();
 }
 
 function getLandingSeo(): SeoPayload {
@@ -76,19 +80,23 @@ function getLandingSeo(): SeoPayload {
 }
 
 function getDocsSeo(page: DocPage): SeoPayload {
+  const docPath = page.slug === "not-found" ? getRoutePath({ view: "docs", slug: DEFAULT_PAGE }) : getRoutePath({ view: "docs", slug: page.slug });
+  const url = `${siteUrl}${docPath}`;
+  const isNotFound = page.slug === "not-found";
+
   return {
     title: `${page.title} | Codex Kit Docs`,
     description: page.summary,
     keywords: `${page.title}, Codex Kit docs, ${defaultKeywords}`,
-    url: `${siteUrl}/#/docs/${page.slug}`,
+    url,
     type: "article",
-    robots: "index,follow",
+    robots: isNotFound ? "noindex,nofollow" : "index,follow",
     schema: {
       "@context": "https://schema.org",
       "@type": "TechArticle",
       headline: page.title,
       description: page.summary,
-      url: `${siteUrl}/#/docs/${page.slug}`,
+      url,
       author: {
         "@type": "Person",
         name: "Dao Minh Hiep"

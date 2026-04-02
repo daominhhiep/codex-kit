@@ -1,4 +1,7 @@
+import React from "react";
 import type { DocPage } from "../content";
+
+void React;
 
 type DocsTocProps = {
   page: DocPage;

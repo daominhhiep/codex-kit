@@ -1,10 +1,22 @@
+import React from "react";
 import { repoUrl } from "../content";
 
-const heroImageUrl =
-  "https://images.ctfassets.net/kftzwdyauwt9/5CWrXjTHrPVHU13RzVPxdt/f2c12b2b03d2b4a56c16142037060f38/tablet_m_hero.png?fm=webp&q=90&w=3840";
+void React;
+
+const heroImageBaseUrl =
+  "https://images.ctfassets.net/kftzwdyauwt9/5CWrXjTHrPVHU13RzVPxdt/f2c12b2b03d2b4a56c16142037060f38/tablet_m_hero.png";
+const heroImageUrl = `${heroImageBaseUrl}?fm=webp&q=82&w=1600`;
+const heroImageSrcSet = [
+  `${heroImageBaseUrl}?fm=webp&q=78&w=960 960w`,
+  `${heroImageBaseUrl}?fm=webp&q=82&w=1600 1600w`,
+  `${heroImageBaseUrl}?fm=webp&q=82&w=2400 2400w`
+].join(", ");
+const heroImagePriorityProps = {
+  fetchpriority: "high"
+} as Record<string, string>;
 
 type LandingPageProps = {
-  onOpenDocs: () => void;
+  docsHref: string;
 };
 
 const highlights = [
@@ -37,7 +49,7 @@ const features = [
   }
 ];
 
-export function LandingPage({ onOpenDocs }: LandingPageProps) {
+export function LandingPage({ docsHref }: LandingPageProps) {
   return (
     <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
       <section className="landing-hero">
@@ -52,9 +64,9 @@ export function LandingPage({ onOpenDocs }: LandingPageProps) {
             more time shipping.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <button onClick={onOpenDocs} className="landing-primary">
+            <a href={docsHref} className="landing-primary">
               Read documentation
-            </button>
+            </a>
             <a href={repoUrl} target="_blank" rel="noreferrer" className="landing-secondary">
               View GitHub
             </a>
@@ -72,7 +84,16 @@ export function LandingPage({ onOpenDocs }: LandingPageProps) {
 
         <div className="landing-visual">
           <div className="landing-visual__glow" />
-          <img src={heroImageUrl} alt="Codex app interface" className="landing-visual__image" />
+          <img
+            src={heroImageUrl}
+            srcSet={heroImageSrcSet}
+            sizes="(max-width: 1023px) 100vw, 50vw"
+            alt="Codex app interface"
+            className="landing-visual__image"
+            loading="eager"
+            decoding="async"
+            {...heroImagePriorityProps}
+          />
         </div>
       </section>
 

@@ -11,29 +11,33 @@ export type AppRoute =
       slug: string;
     };
 
-export function getRouteFromHash(): AppRoute {
-  const hash = window.location.hash.replace(/^#\/?/, "").trim();
+export function getRouteFromLocation(pathname = window.location.pathname): AppRoute {
+  const normalizedPath = pathname.replace(/\/+$/, "") || "/";
+  const segments = normalizedPath.split("/").filter(Boolean);
 
-  if (!hash) {
+  if (segments.length === 0) {
     return { view: "landing" };
   }
 
-  const [head, tail] = hash.split("/");
+  const [head, tail] = segments;
 
   if (head === "docs") {
     return { view: "docs", slug: tail || DEFAULT_PAGE };
   }
 
-  return { view: "docs", slug: head || DEFAULT_PAGE };
+  return { view: "landing" };
 }
 
-export function navigateToLanding() {
-  history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
-  window.dispatchEvent(new HashChangeEvent("hashchange"));
+export function getRoutePath(route: AppRoute): string {
+  if (route.view === "landing") {
+    return "/";
+  }
+
+  return getDocPath(route.slug);
 }
 
-export function navigateToDoc(slug: string) {
-  window.location.hash = `/docs/${slug}`;
+export function getDocPath(slug: string) {
+  return `/docs/${slug}`;
 }
 
 export function filterSections(query: string): DocSection[] {

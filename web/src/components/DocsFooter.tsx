@@ -1,10 +1,10 @@
+import React from "react";
 import { repoUrl } from "../content";
+import { getDocPath } from "../docs/navigation";
 
-type DocsFooterProps = {
-  onNavigate: (slug: string) => void;
-};
+void React;
 
-export function DocsFooter({ onNavigate }: DocsFooterProps) {
+export function DocsFooter() {
   return (
     <footer className="mt-16 border-t border-white/8">
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
@@ -12,18 +12,18 @@ export function DocsFooter({ onNavigate }: DocsFooterProps) {
           <div>
             <p className="footer-heading">Product</p>
             <div className="footer-links">
-              <button onClick={() => onNavigate("introduction")}>Documentation</button>
-              <button onClick={() => onNavigate("agents")}>Agents</button>
-              <button onClick={() => onNavigate("skills")}>Skills</button>
-              <button onClick={() => onNavigate("workflows")}>Workflows</button>
+              <a href={getDocPath("introduction")}>Documentation</a>
+              <a href={getDocPath("agents")}>Agents</a>
+              <a href={getDocPath("skills")}>Skills</a>
+              <a href={getDocPath("workflows")}>Workflows</a>
             </div>
           </div>
           <div>
             <p className="footer-heading">Resources</p>
             <div className="footer-links">
-              <button onClick={() => onNavigate("installation")}>Installation</button>
-              <button onClick={() => onNavigate("commands-and-options")}>CLI Reference</button>
-              <button onClick={() => onNavigate("advanced-ui-design")}>Examples</button>
+              <a href={getDocPath("installation")}>Installation</a>
+              <a href={getDocPath("commands-and-options")}>CLI Reference</a>
+              <a href={getDocPath("advanced-ui-design")}>Examples</a>
               <a href={`${repoUrl}/blob/main/CHANGELOG.md`} target="_blank" rel="noreferrer">
                 Changelog
               </a>

@@ -1,19 +1,16 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { DocPage } from "../content";
+import { getDocPath } from "../docs/navigation";
+
+void React;
 
 type DocsPageContentProps = {
   page: DocPage;
   previousPage: DocPage | null;
   nextPage: DocPage | null;
-  onNavigate: (slug: string) => void;
 };
 
-export function DocsPageContent({
-  page,
-  previousPage,
-  nextPage,
-  onNavigate
-}: DocsPageContentProps) {
+export function DocsPageContent({ page, previousPage, nextPage }: DocsPageContentProps) {
   const [expandedImage, setExpandedImage] = useState<{
     src: string;
     alt: string;
@@ -106,18 +103,18 @@ export function DocsPageContent({
 
         <div className="mt-14 grid gap-4 border-t border-white/8 pt-6 md:grid-cols-2">
           {previousPage ? (
-            <button className="pager-card text-left" onClick={() => onNavigate(previousPage.slug)}>
+            <a className="pager-card text-left" href={getDocPath(previousPage.slug)}>
               <span className="pager-label">Previous</span>
               <span className="pager-title">{previousPage.title}</span>
-            </button>
+            </a>
           ) : (
             <div />
           )}
           {nextPage ? (
-            <button className="pager-card text-left md:justify-self-end" onClick={() => onNavigate(nextPage.slug)}>
+            <a className="pager-card text-left md:justify-self-end" href={getDocPath(nextPage.slug)}>
               <span className="pager-label">Next</span>
               <span className="pager-title">{nextPage.title}</span>
-            </button>
+            </a>
           ) : null}
         </div>
       </article>

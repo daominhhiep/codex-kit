@@ -5,7 +5,7 @@ description: Use the Codex Kit CLI to initialize, update, or inspect a Codex-rea
 
 # Codex Kit
 
-Use this skill when the user wants to bootstrap or maintain the Codex Kit scaffold.
+Use this skill when the user wants to bootstrap or maintain the Codex Kit scaffold, or when they want to use the local Codex Kit workflows that are already present in the current repository.
 
 ## Commands
 
@@ -34,6 +34,13 @@ Use this skill when the user wants to bootstrap or maintain the Codex Kit scaffo
 - Use `npx @daominhhiep/codex-kit ...` so the plugin works as a standalone published package.
 - Before `update`, inspect current status so local modifications to managed files are visible.
 - Prefer the new `install` / `sync` / `list` command family in suggestions, but continue to recognize legacy aliases.
+- Treat workflows as local project resources, not as CLI commands.
+- If the repository already contains `.agents/workflows/`, prefer following those workflow files directly instead of searching npm or package cache.
+- Normalize common workflow aliases before acting:
+  - `ui-ux-promax`, `ui ux promax`, `uix promax` -> `ui-ux-pro-max`
+  - `review workflow` -> `review`
+  - `ship workflow` -> `ship`
+- If the user asks to use a workflow from Codex Kit and the repository is not scaffolded yet, explain that the workflow lives in the project scaffold and suggest `npx @daominhhiep/codex-kit init` or `npx @daominhhiep/codex-kit install`.
 
 ## Intent Mapping
 
@@ -49,6 +56,10 @@ Use this skill when the user wants to bootstrap or maintain the Codex Kit scaffo
 - If the user asks to list installed local skills, run `npx @daominhhiep/codex-kit list --target skills --scope local`.
 - If the user asks to update both the workspace plugin and local skills, run `npx @daominhhiep/codex-kit sync-codex`.
 - If the user asks for initial full setup in the current repository, run `npx @daominhhiep/codex-kit setup-codex`.
+- If the user asks to use a Codex Kit workflow in the current repository, first check whether `.agents/workflows/<name>.md` exists in the workspace and then follow that workflow locally.
+- If the user asks for a workflow by an alias such as `ui-ux-promax`, map it to the canonical file name `ui-ux-pro-max`.
+- If the repository has Codex Kit scaffolding and the workflow file exists, do not search npm, package cache, or remote docs first.
+- If the workflow file does not exist, explain that the repository is missing the scaffolded workflow and then suggest the smallest relevant scaffold command.
 
 ## Natural Language Examples
 
@@ -57,9 +68,13 @@ Use this skill when the user wants to bootstrap or maintain the Codex Kit scaffo
 - `cài skill frontend` -> search first, then suggest exact matches such as `frontend-design`, `nextjs-react-expert`, or `tailwind-patterns`
 - `xem local codex đã cài skill gì` -> `npx @daominhhiep/codex-kit list --target skills --scope local`
 - `đồng bộ lại plugin và skills` -> `npx @daominhhiep/codex-kit sync-codex`
+- `dùng workflow ui-ux-promax của codex kit` -> resolve to `.agents/workflows/ui-ux-pro-max.md` in the current repository and follow that workflow
+- `use the plan workflow from codex kit` -> resolve to `.agents/workflows/plan.md` in the current repository and follow it directly
+- `follow the review workflow in this repo` -> use `.agents/workflows/review.md` from the workspace, not the npm package
 - The shipped MCP bundle currently includes `context7` and a commented `mysql` example using `@benborla29/mcp-server-mysql`.
 
 ## Output
 
-- Explain which command you ran.
-- Summarize which managed files were created, updated, or already up to date.
+- If you used the CLI, explain which command you ran.
+- If you used a local workflow, name the workflow file you followed.
+- Summarize which managed files were created, updated, or already up to date when the task involved scaffold changes.

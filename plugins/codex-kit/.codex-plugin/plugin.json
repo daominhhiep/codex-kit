@@ -1,7 +1,7 @@
 {
   "name": "codex-kit",
   "version": "0.1.4",
-  "description": "Codex Kit plugin for scaffolding repositories, discovering shipped skills, and setting up local Codex.",
+  "description": "Codex Kit plugin for scaffolding repositories, using local Codex Kit workflows, discovering shipped skills, and setting up local Codex.",
   "author": {
     "name": "Dao Minh Hiep",
     "url": "https://github.com/daominhhiep"
@@ -19,8 +19,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Codex Kit",
-    "shortDescription": "Scaffold repos, discover skills, and set up Codex.",
-    "longDescription": "Provides Codex-native setup flows for project scaffolding, workspace plugin installation, local skill management, and shipped skill discovery.",
+    "shortDescription": "Scaffold repos, use workflows, and set up Codex.",
+    "longDescription": "Provides Codex-native setup flows for project scaffolding, local workflow routing inside scaffolded repositories, workspace plugin installation, local skill management, and shipped skill discovery.",
     "developerName": "Dao Minh Hiep",
     "category": "Developer Tools",
     "capabilities": [
@@ -33,7 +33,8 @@
     "termsOfServiceURL": "https://github.com/daominhhiep/codex-kit",
     "defaultPrompt": [
       "Use Codex Kit to set up this repository for Codex and install the workspace plugin.",
-      "Use Codex Kit to list, search, install, or sync the shipped Codex Kit skills."
+      "Use Codex Kit to list, search, install, or sync the shipped Codex Kit skills.",
+      "If this repository already has Codex Kit workflows, follow the local workflow files in .agents/workflows before falling back to scaffold commands."
     ],
     "brandColor": "#10A37F"
   }
