@@ -42,36 +42,64 @@ npx @daominhhiep/codex-kit init --path ./my-project
 
 ## CLI
 
+Primary commands:
+
 ```bash
 codex-kit init
+codex-kit install
+codex-kit install --target plugin
+codex-kit install --target mcp
+codex-kit install --target skills
+codex-kit install --target skills --scope local
 codex-kit update
+codex-kit sync --target mcp
+codex-kit sync --target plugin
+codex-kit sync --target skills
+codex-kit sync --target skills --scope local
+codex-kit list --target skills
+codex-kit list --target skills --query frontend
+codex-kit list --target skills --scope local
+codex-kit list --target plugin
+codex-kit list --target mcp
+codex-kit remove --target skills --scope local --skills clean-code,planning
 codex-kit setup-codex
 codex-kit sync-codex
-codex-kit list-skills
-codex-kit search-skills frontend
-codex-kit list-installed-skills
 codex-kit status
-codex-kit install-skills
-codex-kit sync-skills
-codex-kit remove-skills --skills clean-code,planning
 ```
 
 Common examples:
 
 ```bash
-codex-kit list-skills
-codex-kit search-skills frontend
-codex-kit list-installed-skills
-
-codex-kit init --install-plugin
 codex-kit init --path ./my-project
+codex-kit install --path ./my-project
+codex-kit install --target plugin
+codex-kit install --target mcp
+codex-kit install --target skills
+
+codex-kit list --target skills
+codex-kit list --target skills --query frontend
+codex-kit list --target skills --scope local
+codex-kit list --target mcp
+
+codex-kit install --target skills --scope local
+codex-kit install --target skills --scope local --skills clean-code,planning
+codex-kit sync --target skills --scope local --skills clean-code,planning
+codex-kit remove --target skills --scope local --skills clean-code,planning
 
 codex-kit setup-codex
 codex-kit sync-codex
+```
 
+Legacy aliases still work:
+
+```bash
+codex-kit install --target project
+codex-kit sync --target project
+codex-kit list-skills
+codex-kit search-skills frontend
+codex-kit list-installed-skills
 codex-kit install-skills
-codex-kit install-skills --skills clean-code,planning
-codex-kit sync-skills --skills clean-code,planning
+codex-kit sync-skills
 codex-kit remove-skills --skills clean-code,planning
 ```
 
@@ -85,14 +113,41 @@ Codex Kit ships with a local Codex plugin scaffold:
 
 There are two different installation scopes:
 
-- project-local: the plugin is copied into the current repository with `init --install-plugin`
-- user-local: the shipped skill catalog is installed into `${CODEX_HOME:-~/.codex}/skills` with `install-skills`
+- project-local: `init` or plain `install` installs the scaffold, while `install --target plugin` or `install --target skills` add only those parts into the current repository
+- project-local MCP: `install --target mcp` writes the shipped MCP bundle into `.codex/config.toml`
+- user-local: the shipped skill catalog is installed into `${CODEX_HOME:-~/.codex}/skills`
+- user-local MCP: `install --target mcp --scope local` writes the shipped MCP bundle into `${CODEX_HOME:-~/.codex}/config.toml`
 
-To scaffold a project and include the plugin:
+To scaffold a project:
 
 ```bash
-npx @daominhhiep/codex-kit init --install-plugin
+npx @daominhhiep/codex-kit init
+npx @daominhhiep/codex-kit install
 ```
+
+To install only the workspace plugin into the current project:
+
+```bash
+npx @daominhhiep/codex-kit install --target plugin
+```
+
+To install only the shipped project skills into the current project:
+
+```bash
+npx @daominhhiep/codex-kit install --target skills
+```
+
+To install the shipped MCP bundle into the project or local Codex config:
+
+```bash
+npx @daominhhiep/codex-kit install --target mcp
+npx @daominhhiep/codex-kit install --target mcp --scope local
+```
+
+The shipped MCP bundle currently includes:
+
+- `context7` for developer documentation
+- a commented `mysql` example via `@benborla29/mcp-server-mysql`; uncomment it only when you want to enable MySQL MCP intentionally
 
 To do the full local setup in one go for the current repository:
 
@@ -109,7 +164,7 @@ npx @daominhhiep/codex-kit sync-codex
 To install the shipped skills into local Codex:
 
 ```bash
-npx @daominhhiep/codex-kit install-skills
+npx @daominhhiep/codex-kit install --target skills --scope local
 ```
 
 By default, local skills are installed into:
@@ -121,9 +176,9 @@ ${CODEX_HOME:-~/.codex}/skills
 To browse or search the shipped catalog:
 
 ```bash
-npx @daominhhiep/codex-kit list-skills
-npx @daominhhiep/codex-kit search-skills frontend
-npx @daominhhiep/codex-kit list-installed-skills
+npx @daominhhiep/codex-kit list --target skills
+npx @daominhhiep/codex-kit list --target skills --query frontend
+npx @daominhhiep/codex-kit list --target skills --scope local
 ```
 
 The bundled plugin can also help map natural requests such as "cài skill frontend" or "liệt kê skills debug" to the right Codex Kit commands.

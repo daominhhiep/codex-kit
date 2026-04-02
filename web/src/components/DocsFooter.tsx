@@ -24,7 +24,7 @@ export function DocsFooter({ onNavigate }: DocsFooterProps) {
               <button onClick={() => onNavigate("installation")}>Installation</button>
               <button onClick={() => onNavigate("commands-and-options")}>CLI Reference</button>
               <button onClick={() => onNavigate("advanced-ui-design")}>Examples</button>
-              <a href={repoUrl} target="_blank" rel="noreferrer">
+              <a href={`${repoUrl}/blob/main/CHANGELOG.md`} target="_blank" rel="noreferrer">
                 Changelog
               </a>
             </div>

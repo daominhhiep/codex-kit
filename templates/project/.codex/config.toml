@@ -35,3 +35,35 @@ url = "https://mcp.context7.com/mcp"
 # cwd = "."
 # startup_timeout_sec = 10.0
 # tool_timeout_sec = 60.0
+
+# Example: MySQL MCP server (disabled until you uncomment and configure it)
+# [mcp_servers.mysql]
+# command = "npx"
+# args = ["-y", "@benborla29/mcp-server-mysql"]
+# env_vars = [
+#   "MYSQL_HOST",
+#   "MYSQL_PORT",
+#   "MYSQL_USER",
+#   "MYSQL_PASS",
+#   "MYSQL_DB",
+#   "MYSQL_SOCKET_PATH",
+#   "MYSQL_CONNECTION_STRING",
+#   "ALLOW_INSERT_OPERATION",
+#   "ALLOW_UPDATE_OPERATION",
+#   "ALLOW_DELETE_OPERATION",
+#   "ALLOW_DDL_OPERATION",
+#   "MYSQL_DISABLE_READ_ONLY_TRANSACTIONS",
+#   "MYSQL_SSL",
+#   "MYSQL_SSL_CA",
+#   "MYSQL_SSL_CERT",
+#   "MYSQL_SSL_KEY"
+# ]
+# startup_timeout_sec = 20.0
+# tool_timeout_sec = 60.0
+#
+# Minimal read-only example:
+# export MYSQL_HOST=127.0.0.1
+# export MYSQL_PORT=3306
+# export MYSQL_USER=root
+# export MYSQL_PASS=your_password
+# export MYSQL_DB=your_database

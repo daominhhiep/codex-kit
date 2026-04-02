@@ -2,9 +2,9 @@
 
 All notable changes to this project are documented here.
 
-## [v0.1.3] - 2026-04-01
+## [v0.1.4] - 2026-04-02
 
-Release: [v0.1.3](https://github.com/daominhhiep/codex-kit/releases/tag/v0.1.3)
+Release: [v0.1.4](https://github.com/daominhhiep/codex-kit/releases/tag/v0.1.4)
 
 ### Added
 

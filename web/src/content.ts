@@ -168,8 +168,10 @@ AGENT_FLOW.md
             id: "installation-scopes",
             title: "Installation Scopes",
             bullets: [
-              "Project-local: `init --install-plugin` copies the plugin into the current repository under `.agents/plugins/codex-kit`.",
-              "User-local: `install-skills` copies the shipped skill catalog into `${CODEX_HOME:-~/.codex}/skills` for local Codex on the current machine.",
+              "Project-local: `init` scaffolds the repository, while `install --target plugin` and `install --target skills` add only those parts into the current project.",
+              "Project-local MCP: `install --target mcp` writes the shipped MCP bundle into `.codex/config.toml`.",
+              "User-local: `install --target skills --scope local` copies the shipped skill catalog into `${CODEX_HOME:-~/.codex}/skills` for local Codex on the current machine.",
+              "User-local MCP: `install --target mcp --scope local` writes the shipped MCP bundle into `${CODEX_HOME:-~/.codex}/config.toml`.",
               "Run both when you want a repository-specific plugin plus the full Codex Kit skill catalog available in local Codex.",
               "After upgrading Codex Kit, use `sync-codex` to sync both scopes with one command."
             ]
@@ -178,11 +180,14 @@ AGENT_FLOW.md
             id: "install-plugin",
             title: "Install The Plugin In Codex",
             body: [
-              "When you scaffold with `--install-plugin`, Codex Kit copies the plugin into `.agents/plugins/codex-kit` and creates `.agents/plugins/marketplace.json` with `installation: \"INSTALLED_BY_DEFAULT\"`.",
+              "Run `init` or plain `install` when you want the full project scaffold.",
+              "Run `install --target plugin` when you only want the workspace plugin files in the current project. Codex Kit copies the plugin into `.agents/plugins/codex-kit` and creates `.agents/plugins/marketplace.json` with `installation: \"INSTALLED_BY_DEFAULT\"`.",
               "After that, open the `Plugins` view in Codex, choose the `Codex Kit Local` marketplace, and click the `+` button on `Codex Kit`.",
               "If you also want the full shipped skill catalog in local Codex, run the full setup command below."
             ],
-            code: `npx @daominhhiep/codex-kit init --install-plugin
+            code: `npx @daominhhiep/codex-kit init
+npx @daominhhiep/codex-kit install
+npx @daominhhiep/codex-kit install --target plugin
 
 npx @daominhhiep/codex-kit setup-codex
 npx @daominhhiep/codex-kit sync-codex`,
@@ -190,14 +195,15 @@ npx @daominhhiep/codex-kit sync-codex`,
               src: "/codex-kit-plugin-install.png",
               alt: "Codex Plugin Directory showing the Codex Kit Local marketplace and the Codex Kit install card.",
               caption:
-                "The local marketplace appears in the Plugin Directory after the workspace is scaffolded with `--install-plugin`."
+                "The local marketplace appears in the Plugin Directory after the project scaffold and workspace plugin are installed."
             }
           },
           {
             id: "plugin-install-steps",
             title: "Plugin Install Steps",
             bullets: [
-              "Run `npx @daominhhiep/codex-kit init --install-plugin` in the target repository.",
+              "Run `npx @daominhhiep/codex-kit init` or `npx @daominhhiep/codex-kit install` if the repository does not have the Codex Kit scaffold yet.",
+              "Run `npx @daominhhiep/codex-kit install --target plugin` to add the workspace plugin files and marketplace entry.",
               "Restart Codex or reopen the workspace if the local marketplace is not visible yet.",
               "Open `Plugins` in the left sidebar.",
               "Switch the marketplace selector to `Codex Kit Local`.",
@@ -206,20 +212,44 @@ npx @daominhhiep/codex-kit sync-codex`,
             ]
           },
           {
+            id: "project-skill-install",
+            title: "Install Only The Project Skill Bundle",
+            body: [
+              "Run `install --target skills` when you only want the shipped project skills and shared skill assets copied into the current repository.",
+              "This installs the project-local skill bundle under `.agents/skills` and `.agents/.shared` without touching local Codex."
+            ],
+            code: `npx @daominhhiep/codex-kit install --target skills
+
+npx @daominhhiep/codex-kit sync --target skills`
+          },
+          {
+            id: "mcp-install",
+            title: "Install The MCP Bundle",
+            body: [
+              "Codex stores MCP configuration in `config.toml`, either in project scope at `.codex/config.toml` or in local scope at `${CODEX_HOME:-~/.codex}/config.toml`.",
+              "Codex Kit ships a default MCP bundle based on the current project scaffold, including `context7` and a commented `mysql` example using `@benborla29/mcp-server-mysql`."
+            ],
+            code: `npx @daominhhiep/codex-kit install --target mcp
+
+npx @daominhhiep/codex-kit install --target mcp --scope local
+npx @daominhhiep/codex-kit sync --target mcp
+npx @daominhhiep/codex-kit list --target mcp`
+          },
+          {
             id: "local-skill-install",
             title: "Install The Kit Skills Into Local Codex",
             body: [
-              "Use `install-skills` when you want the shipped Codex Kit skill catalog available in local Codex outside a single project workspace.",
+              "Use `install --target skills --scope local` when you want the shipped Codex Kit skill catalog available in local Codex outside a single project workspace.",
               "By default, Codex Kit installs the skills into `${CODEX_HOME:-~/.codex}/skills`. Use `--codex-home` to override that location."
             ],
-            code: `npx @daominhhiep/codex-kit install-skills
+            code: `npx @daominhhiep/codex-kit install --target skills --scope local
 
-npx @daominhhiep/codex-kit install-skills --codex-home ~/.codex`,
+npx @daominhhiep/codex-kit install --target skills --scope local --codex-home ~/.codex`,
             image: {
               src: "/codex-kit-skill-install.png",
               alt: "Codex interface showing the installed Codex Kit skills in local Codex.",
               caption:
-                "Use `install-skills` when you want the Codex Kit skill catalog available in local Codex outside a single workspace."
+                "Use `install --target skills --scope local` when you want the Codex Kit skill catalog available in local Codex outside a single workspace."
             }
           },
           {
@@ -231,38 +261,38 @@ npx @daominhhiep/codex-kit install-skills --codex-home ~/.codex`,
             ],
             image: {
               src: "/codex-install-skill.png",
-              alt: "Codex thread showing install-skills commands and the permission prompt for writing a skill into ~/.codex/skills.",
+              alt: "Codex thread showing local skill install commands and the permission prompt for writing a skill into ~/.codex/skills.",
               caption:
-                "A targeted install such as `install-skills --skills frontend-design` can trigger a local permission prompt before Codex writes into the local skills directory."
+                "A targeted install such as `install --target skills --scope local --skills frontend-design` can trigger a local permission prompt before Codex writes into the local skills directory."
             }
           },
           {
             id: "local-skill-maintenance",
             title: "Sync Or Remove Local Skills",
             body: [
-              "Use `sync-skills` to overwrite the local Codex copy with the current shipped version from Codex Kit.",
+              "Use `sync --target skills --scope local` to overwrite the local Codex copy with the current shipped version from Codex Kit.",
               "Use `--skills` when you want to install, sync, or remove only specific skill folders instead of the full catalog.",
-              "`remove-skills` requires `--skills` so the CLI does not remove the full local skill catalog by accident."
+              "`remove --target skills --scope local` requires `--skills` so the CLI does not remove the full local skill catalog by accident."
             ],
-            code: `npx @daominhhiep/codex-kit sync-skills
+            code: `npx @daominhhiep/codex-kit sync --target skills --scope local
 
-npx @daominhhiep/codex-kit install-skills --skills clean-code,planning
-npx @daominhhiep/codex-kit sync-skills --skills clean-code,planning
-npx @daominhhiep/codex-kit remove-skills --skills clean-code,planning`
+npx @daominhhiep/codex-kit install --target skills --scope local --skills clean-code,planning
+npx @daominhhiep/codex-kit sync --target skills --scope local --skills clean-code,planning
+npx @daominhhiep/codex-kit remove --target skills --scope local --skills clean-code,planning`
           },
           {
             id: "skill-discovery",
             title: "Discover Available Skills",
             body: [
-              "Use `list-skills` to browse the full shipped catalog grouped by category.",
-              "Use `search-skills <query>` to find the right skill by domain, behavior, or keyword.",
-              "Use `list-installed-skills` to compare what is already installed in local Codex.",
+              "Use `list --target skills` to browse the full shipped catalog grouped by category.",
+              "Use `list --target skills --query <text>` to find the right skill by domain, behavior, or keyword.",
+              "Use `list --target skills --scope local` to compare what is already installed in local Codex.",
               "The bundled plugin can also map natural requests such as `cài skill frontend` or `liệt kê skills debug` to the right Codex Kit commands."
             ],
-            code: `npx @daominhhiep/codex-kit list-skills
+            code: `npx @daominhhiep/codex-kit list --target skills
 
-npx @daominhhiep/codex-kit search-skills frontend
-npx @daominhhiep/codex-kit list-installed-skills`
+npx @daominhhiep/codex-kit list --target skills --query frontend
+npx @daominhhiep/codex-kit list --target skills --scope local`
           }
         ]
       }
@@ -1218,15 +1248,62 @@ python3 .agents/.shared/ui-ux-pro-max/scripts/search.py "fintech landing" --doma
         blocks: [
           {
             id: "commands",
-            title: "Commands",
+            title: "Primary Commands",
             code: `codex-kit init
+codex-kit install
+codex-kit install --target plugin
+codex-kit install --target mcp
+codex-kit install --target skills
+codex-kit install --target skills --scope local
 codex-kit update
+codex-kit sync --target mcp
+codex-kit sync --target plugin
+codex-kit sync --target skills
+codex-kit sync --target skills --scope local
+codex-kit list --target skills
+codex-kit list --target skills --query frontend
+codex-kit list --target skills --scope local
+codex-kit list --target plugin
+codex-kit list --target mcp
+codex-kit remove --target skills --scope local --skills clean-code,planning
 codex-kit setup-codex
 codex-kit sync-codex
+codex-kit status`
+          },
+          {
+            id: "command-introductions",
+            title: "What Each Command Does",
+            bullets: [
+              "`init` installs the full Codex Kit scaffold into the current project.",
+              "`install` without `--target` behaves the same as `init`.",
+              "`install --target plugin` installs only the workspace plugin into the current project.",
+              "`install --target mcp` installs the shipped MCP bundle into the current project's `.codex/config.toml`.",
+              "`install --target skills` installs only the shipped project skill bundle into `.agents/skills` and `.agents/.shared`.",
+              "`install --target skills --scope local` installs shipped skills into `${CODEX_HOME:-~/.codex}/skills` for local Codex.",
+              "`update` refreshes scaffold-managed project files and keeps local modifications safe unless you pass `--force`.",
+              "`sync --target mcp` refreshes the shipped MCP bundle in the current project's `.codex/config.toml`.",
+              "`sync --target plugin` refreshes only the workspace plugin files in the current project.",
+              "`sync --target skills` refreshes only the project-local skill bundle in the current repository.",
+              "`sync --target skills --scope local` overwrites the local Codex copy with the current shipped skill version.",
+              "`list --target skills` shows the shipped skill catalog grouped by category.",
+              "`list --target skills --query <text>` searches the shipped skill catalog by keyword or domain.",
+              "`list --target skills --scope local` shows which shipped skills are already installed in local Codex.",
+              "`list --target plugin` reports workspace plugin status for the current project.",
+              "`list --target mcp` reports whether the shipped MCP bundle is installed in the current project or local Codex config.",
+              "`remove --target skills --scope local --skills ...` removes only the named local Codex skills.",
+              "`setup-codex` combines workspace plugin setup with local skill installation and prints next steps.",
+              "`sync-codex` combines workspace plugin sync with local skill sync after upgrading Codex Kit.",
+              "`status` reports missing, modified, and outdated scaffold-managed files in the current project."
+            ]
+          },
+          {
+            id: "legacy-aliases",
+            title: "Legacy Aliases",
+            code: `codex-kit sync --target project
+codex-kit install --target project
 codex-kit list-skills
 codex-kit search-skills frontend
 codex-kit list-installed-skills
-codex-kit status
 codex-kit install-skills
 codex-kit sync-skills
 codex-kit remove-skills --skills clean-code,planning`
@@ -1235,10 +1312,22 @@ codex-kit remove-skills --skills clean-code,planning`
             id: "options",
             title: "Options",
             code: `codex-kit init --path ./my-project
+codex-kit install --path ./my-project
 codex-kit init --force
+codex-kit install --force
 codex-kit init --dry-run
+codex-kit install --dry-run
 codex-kit init --install-plugin
 codex-kit init --quiet
+codex-kit install --target plugin
+codex-kit install --target mcp
+codex-kit install --target skills
+codex-kit install --target mcp --scope local
+codex-kit sync --target mcp
+codex-kit sync --target skills --force
+codex-kit sync --target plugin --force
+codex-kit list --target plugin
+codex-kit list --target mcp
 
 codex-kit setup-codex --path ./my-project
 codex-kit setup-codex --codex-home ~/.codex
@@ -1246,39 +1335,38 @@ codex-kit setup-codex --skills clean-code,planning
 codex-kit sync-codex
 codex-kit sync-codex --skills clean-code,planning
 
-codex-kit list-skills
-codex-kit list-skills --skills clean-code,planning
-codex-kit search-skills frontend
-codex-kit list-installed-skills
-codex-kit list-installed-skills --codex-home ~/.codex
+codex-kit list --target skills
+codex-kit list --target skills --skills clean-code,planning
+codex-kit list --target skills --query frontend
+codex-kit list --target skills --scope local
+codex-kit list --target skills --scope local --codex-home ~/.codex
 
 codex-kit update --path ./my-project
 codex-kit update --force
 codex-kit update --dry-run
 codex-kit update --install-plugin
 
-codex-kit install-skills --codex-home ~/.codex
-codex-kit install-skills --skills clean-code,planning
-codex-kit install-skills --force
-codex-kit sync-skills --skills clean-code,planning
-codex-kit remove-skills --skills clean-code,planning
+codex-kit install --target skills --scope local --codex-home ~/.codex
+codex-kit install --target skills --scope local --skills clean-code,planning
+codex-kit install --target skills --scope local --force
+codex-kit sync --target skills --scope local --skills clean-code,planning
+codex-kit remove --target skills --scope local --skills clean-code,planning
 
 codex-kit status --path ./my-project`
           },
           {
-            id: "local-skill-commands",
-            title: "Local Skill Commands",
+            id: "scope-and-flags",
+            title: "Scope And Flags",
             bullets: [
-              "`list-skills` shows the full shipped catalog grouped by category with quick install commands.",
-              "`search-skills <query>` finds skills by name, description, or category terms.",
-              "`list-installed-skills` reports which shipped skills already exist in local Codex.",
-              "`install-skills` installs missing Codex Kit skills into `${CODEX_HOME:-~/.codex}/skills` by default.",
-              "`sync-skills` overwrites the selected local skills with the current shipped version.",
-              "`remove-skills` removes only the skill folders named in `--skills`.",
-              "`setup-codex` combines workspace plugin setup with local skill installation and prints the next steps.",
-              "`sync-codex` combines workspace plugin sync with local shipped skill sync after a package upgrade.",
+              "Use project scope by default for scaffold, plugin, and project skill operations in the current repository.",
+              "Use project scope by default for scaffold, plugin, project skills, and project MCP operations in the current repository.",
+              "Use `--scope local` only when you want Codex Kit to write into `${CODEX_HOME:-~/.codex}`.",
               "Use `--codex-home` to target a different local Codex directory.",
-              "Use `--skills` to work on specific skill names instead of the full catalog."
+              "Use `--skills` only for targeted local skill install, sync, or removal.",
+              "Use `--query` only with `list --target skills` when searching the shipped skill catalog.",
+              "The shipped MCP bundle includes `context7` and a commented `mysql` example wired for `@benborla29/mcp-server-mysql`; uncomment it only when you intentionally want to enable MySQL MCP.",
+              "Use `--force` when you intentionally want to overwrite existing or locally modified managed files.",
+              "Use `--dry-run` to preview what Codex Kit would write before changing files."
             ]
           },
           {
