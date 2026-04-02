@@ -29,11 +29,13 @@ When delegating to a subagent, include the preferred skill set in the task hando
 - Use `.agents/workflows/create.md` for new features or structured code generation.
 - Use `.agents/workflows/enhance.md` for iterative work inside an existing codebase.
 - Use `.agents/workflows/ui-ux-pro-max.md` when the primary task is UI direction, redesign, or UX shaping.
+- Use `.agents/workflows/figma-to-code.md` when the task is to implement an existing Figma frame or flow into the current codebase.
 - Prefer the `implementer` subagent for scoped code changes after the task is clear.
 - Use `frontend_specialist`, `backend_specialist`, `database_architect`, or `mobile_developer` when domain-specific implementation work is clearly separated.
 - Load `clean-code`, `frontend-design`, `api-patterns`, `database-design`, or `nodejs-best-practices` only when they fit the stack.
   Preferred pairings:
   `frontend_specialist` -> `clean-code`, `frontend-design`, `nextjs-react-expert`, `tailwind-patterns`, `web-design-guidelines`
+  `frontend_specialist` for Figma implementation -> `clean-code`, `frontend-design`, `web-design-guidelines`
   `backend_specialist` -> `clean-code`, `api-patterns`, `nodejs-best-practices`, `python-patterns`, `database-design`
   `database_architect` -> `database-design`, `clean-code`
   `mobile_developer` -> `mobile-design`, `clean-code`

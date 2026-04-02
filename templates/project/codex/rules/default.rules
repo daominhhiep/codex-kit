@@ -1,0 +1,64 @@
+# Codex rules are evaluated at startup.
+# Keep this file focused on execution policy, not general coding behavior.
+
+# Prompt before dependency installs that may change the environment.
+prefix_rule(
+    pattern = [["npm", "pnpm", "yarn", "bun"], "install"],
+    decision = "prompt",
+    justification = "Dependency installs can change the local environment and lockfiles.",
+    match = [
+        "npm install",
+        "pnpm install",
+        "yarn install",
+        "bun install",
+    ],
+    not_match = [
+        "npm test",
+        "pnpm dev",
+    ],
+)
+
+# Prompt before pushing changes to a remote repository.
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "prompt",
+    justification = "Pushing publishes local commits to a remote repository.",
+    match = [
+        "git push",
+        "git push origin main",
+    ],
+    not_match = [
+        "git status",
+        "git pull",
+    ],
+)
+
+# Prompt before writing into the user's local Codex skills directory.
+prefix_rule(
+    pattern = ["npx", "@daominhhiep/codex-kit", ["install", "sync"], "--target", "skills", "--scope", "local"],
+    decision = "prompt",
+    justification = "Local Codex skill changes write into ${CODEX_HOME:-~/.codex}/skills.",
+    match = [
+        "npx @daominhhiep/codex-kit install --target skills --scope local",
+        "npx @daominhhiep/codex-kit sync --target skills --scope local",
+    ],
+    not_match = [
+        "npx @daominhhiep/codex-kit install --target skills",
+        "npx @daominhhiep/codex-kit list --target skills --scope local",
+    ],
+)
+
+# Prompt before writing MCP configuration into the user's local Codex config.
+prefix_rule(
+    pattern = ["npx", "@daominhhiep/codex-kit", ["install", "sync"], "--target", "mcp", "--scope", "local"],
+    decision = "prompt",
+    justification = "Local MCP changes write into ${CODEX_HOME:-~/.codex}/config.toml.",
+    match = [
+        "npx @daominhhiep/codex-kit install --target mcp --scope local",
+        "npx @daominhhiep/codex-kit sync --target mcp --scope local",
+    ],
+    not_match = [
+        "npx @daominhhiep/codex-kit install --target mcp",
+        "npx @daominhhiep/codex-kit list --target mcp --scope local",
+    ],
+)

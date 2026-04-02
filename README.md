@@ -34,10 +34,11 @@ npx @daominhhiep/codex-kit init --path ./my-project
 
 - root routing docs: `AGENTS.md`, `ARCHITECTURE.md`, `AGENT_FLOW.md`
 - 40+ shipped skills in `.agents/skills`
-- 15 workflow playbooks in `.agents/workflows`
+- 16 workflow playbooks in `.agents/workflows`
 - 16 focused subagents in `.codex/agents`
 - shared UI/UX data and scripts in `.agents/.shared`
 - project-scoped Codex config in `.codex/config.toml`
+- optional Codex execution rules in `codex/rules/default.rules`
 - managed-file tracking in `.codex-kit/manifest.json`
 
 ## CLI
@@ -182,6 +183,18 @@ npx @daominhhiep/codex-kit list --target skills --scope local
 ```
 
 The bundled plugin can also help map natural requests such as "cài skill frontend" or "liệt kê skills debug" to the right Codex Kit commands.
+
+## Codex Rules
+
+Codex Kit now ships a minimal execution policy template at `codex/rules/default.rules`.
+
+It is intentionally narrow:
+
+- prompts before dependency installs such as `npm install` or `pnpm install`
+- prompts before `git push`
+- prompts before Codex Kit writes into local Codex with `--scope local`
+
+It does not replace `AGENTS.md`, skills, or workflows. Those files still handle behavior and routing; `codex/rules/default.rules` is only for sandbox approval policy.
 
 ## Requirements
 

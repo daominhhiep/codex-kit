@@ -138,8 +138,23 @@ AGENT_FLOW.md
 .codex/
   config.toml
   agents/
+codex/
+  rules/
+    default.rules
 .codex-kit/
   manifest.json`
+          },
+          {
+            id: "codex-rules",
+            title: "Codex Rules",
+            body: [
+              "The scaffold also includes `codex/rules/default.rules`, a minimal execution-policy template based on the official Codex rules format.",
+              "It prompts before dependency installs, `git push`, and Codex Kit commands that write into local Codex with `--scope local`.",
+              "Keep behavioral guidance in `AGENTS.md`, skills, and workflows. Use `codex/rules/default.rules` only for command approval policy."
+            ],
+            code: `codex execpolicy check --pretty \\
+  --rules ./codex/rules/default.rules \\
+  -- git push origin main`
           },
           {
             id: "installation-notes",
@@ -148,6 +163,7 @@ AGENT_FLOW.md
               "Use `--force` only when you intentionally want to overwrite managed files.",
               "Use `--dry-run` to inspect changes before writing scaffold files.",
               "Use `status` and `update` after installation to keep managed files aligned with the current template version.",
+              "Edit `codex/rules/default.rules` if your team wants a different approval posture.",
               "Read `Local Codex Setup` next if you want the plugin or skill catalog installed into Codex."
             ]
           }

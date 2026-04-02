@@ -41,6 +41,7 @@ Once the primary mode is clear, route to the narrowest workflow:
 | bug or regression investigation | `debug.md` |
 | review or audit request | `review.md` |
 | UI or UX design direction work | `ui-ux-pro-max.md` |
+| implement an existing Figma design in code | `figma-to-code.md` |
 | test creation or test execution | `test.md` |
 | local preview management | `preview.md` |
 | project or task status request | `status.md` |
@@ -64,6 +65,7 @@ Examples:
 - `debugging` for reproduction and evidence gathering
 - `clean-code` for scoped implementation quality
 - `frontend-design` for UI-heavy work
+- `frontend-design` plus `web-design-guidelines` for Figma-to-code work
 - `tailwind-patterns` for Tailwind-first implementation details
 - `nextjs-react-expert` for React or Next.js UI performance concerns
 - `api-patterns` or `database-design` for server-side structure changes
