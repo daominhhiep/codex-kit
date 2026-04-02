@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented here.
 
+## [v0.1.4] - 2026-04-02
+
+Release: [v0.1.4](https://github.com/daominhhiep/codex-kit/releases/tag/v0.1.4)
+
+### Added
+
+- Implemented dynamic SEO management for docs with `robots.txt`, `sitemap.xml`, and JSON-LD support.
+- Added MCP server support (`src/lib/mcp.js`) exposed via Codex Kit.
+- Added support for OpenAI release-readiness agent workflow.
+- Added `status` CLI command to verify project workspace state.
+
+### Improved
+
+- Refactored CLI argument parsing to use action-target operations instead of raw options.
+- Renamed `LICENSE.txt` to `LICENSE`.
+
 ## [v0.1.3] - 2026-04-01
 
 Release: [v0.1.3](https://github.com/daominhhiep/codex-kit/releases/tag/v0.1.3)

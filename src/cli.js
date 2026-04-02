@@ -5,10 +5,15 @@ import { fileURLToPath } from "node:url";
 import {
   initProject,
   installLocalSkills,
+  installProjectSkills,
+  installWorkspacePlugin,
   listInstalledLocalSkills,
   removeLocalSkills,
   statusProject,
+  statusWorkspacePlugin,
   syncLocalSkills,
+  syncProjectSkills,
+  syncWorkspacePlugin,
   updateProject
 } from "./lib/kit.js";
 import {
@@ -16,6 +21,11 @@ import {
   groupSkillsByCategory,
   searchShippedSkills
 } from "./lib/skills.js";
+import {
+  installManagedMcp,
+  statusManagedMcp,
+  syncManagedMcp
+} from "./lib/mcp.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = path.resolve(__dirname, "../package.json");
@@ -23,39 +33,75 @@ const packageJsonPath = path.resolve(__dirname, "../package.json");
 function printHelp() {
   console.log(`Usage: codex-kit <command> [options]
 
-Commands:
-  init      Install the Codex project scaffold
-  update    Refresh kit-managed files
+Primary commands:
+  init
+            Install the Codex Kit scaffold into the target project
+  install
+            Same as \`init\`; installs the Codex Kit scaffold into the target project
+  install --target plugin
+            Install only the Codex Kit workspace plugin into the target project
+  install --target mcp
+            Install the shipped MCP bundle into the project \`.codex/config.toml\`
+  install --target skills
+            Install only the shipped Codex Kit project skills into the target project
+  install --target skills --scope local
+            Install shipped Codex Kit skills into local Codex
+  install --target mcp --scope local
+            Install the shipped MCP bundle into \`\${CODEX_HOME}/config.toml\`
+  update
+            Refresh scaffold-managed files in the target project
+  sync --target plugin
+            Sync the Codex Kit workspace plugin in the target project
+  sync --target mcp
+            Sync the shipped MCP bundle in the project \`.codex/config.toml\`
+  sync --target skills
+            Sync the shipped Codex Kit project skills in the target project
+  sync --target skills --scope local
+            Overwrite local Codex skills with the shipped Codex Kit version
+  sync --target mcp --scope local
+            Sync the shipped MCP bundle in \`\${CODEX_HOME}/config.toml\`
+  list --target skills
+            List shipped Codex Kit skills grouped by category
+  list --target skills --scope local
+            List shipped Codex Kit skills currently installed in local Codex
+  list --target plugin
+            Show workspace plugin status for the target project
+  list --target mcp
+            Show shipped MCP bundle status for project or local Codex config
+  remove --target skills --scope local --skills <list>
+            Remove specific Codex Kit skills from local Codex
+
+Dedicated mixed-scope commands:
   setup-codex
-            Scaffold the plugin into the workspace and install shipped skills locally
+            Scaffold the workspace plugin and install shipped skills locally
   sync-codex
             Sync the workspace plugin and local shipped skills after upgrading Codex Kit
+  status
+            Show scaffold-managed file status for the target project
+
+Legacy aliases:
+  sync --target project
+  update
   list-skills
-            List shipped Codex Kit skills grouped by category
   search-skills <query>
-            Search shipped Codex Kit skills by name, description, or category
   list-installed-skills
-            List shipped Codex Kit skills currently installed in local Codex
   install-skills
-            Install the shipped Codex Kit skills into local Codex
   sync-skills
-            Overwrite local Codex skills with the shipped Codex Kit version
   remove-skills
-            Remove Codex Kit skills from local Codex
-  status    Show installation status
 
 Options:
-  --path <dir>   Target directory (default: current working directory)
+  --target <name>   Command target: project, plugin, mcp, or skills
+  --scope <name>    Scope: project (default) or local
+  --query <text>    Search query for \`list --target skills\`
+  --path <dir>      Target directory (default: current working directory)
   --codex-home <dir>
-                 Codex home directory for local skill installation
-  --skills <list>
-                 Comma-separated skill names for install/sync/remove
-  --install-plugin
-                 Install the Codex Kit plugin into the target workspace
-  --force        Overwrite existing or locally modified managed files
-  --dry-run      Preview file operations without writing
-  --quiet        Suppress non-essential output
-  -h, --help     Show this help
+                    Codex home directory for local skill installation
+  --skills <list>   Comma-separated skill names for install/sync/remove
+  --install-plugin  Legacy option for \`init\` or \`update\`
+  --force           Overwrite existing or locally modified managed files
+  --dry-run         Preview file operations without writing
+  --quiet           Suppress non-essential output
+  -h, --help        Show this help
 `);
 }
 
@@ -70,7 +116,10 @@ function parseArgs(argv) {
     codexHome: process.env.CODEX_HOME || path.join(os.homedir(), ".codex"),
     skills: [],
     positionals: [],
-    path: process.cwd()
+    path: process.cwd(),
+    target: undefined,
+    scope: undefined,
+    query: undefined
   };
 
   for (let index = 0; index < rest.length; index += 1) {
@@ -107,6 +156,27 @@ function parseArgs(argv) {
       }
       options.path = path.resolve(value);
       index += 1;
+    } else if (arg === "--target") {
+      const value = rest[index + 1];
+      if (!value) {
+        throw new Error("Missing value for --target");
+      }
+      options.target = value.trim();
+      index += 1;
+    } else if (arg === "--scope") {
+      const value = rest[index + 1];
+      if (!value) {
+        throw new Error("Missing value for --scope");
+      }
+      options.scope = value.trim();
+      index += 1;
+    } else if (arg === "--query") {
+      const value = rest[index + 1];
+      if (!value) {
+        throw new Error("Missing value for --query");
+      }
+      options.query = value;
+      index += 1;
     } else if (arg === "-h" || arg === "--help") {
       options.help = true;
     } else {
@@ -120,9 +190,178 @@ function parseArgs(argv) {
   return options;
 }
 
+function buildOperation(action, options, overrides = {}) {
+  return {
+    action,
+    target: overrides.target,
+    scope: overrides.scope ?? options.scope ?? "project",
+    query: overrides.query ?? options.query,
+    skills: options.skills,
+    path: options.path,
+    codexHome: options.codexHome,
+    force: options.force,
+    dryRun: options.dryRun,
+    quiet: options.quiet,
+    installPlugin: overrides.installPlugin ?? false,
+    positionals: options.positionals
+  };
+}
+
+function normalizeOperation(options) {
+  switch (options.command) {
+    case "install":
+      return buildOperation("install", options, { target: options.target || "project" });
+    case "sync":
+    case "list":
+    case "remove":
+      return buildOperation(options.command, options, { target: options.target });
+    case "init":
+      return buildOperation("install", options, {
+        target: "project",
+        scope: "project",
+        installPlugin: options.installPlugin
+      });
+    case "update":
+      return buildOperation("sync", options, {
+        target: "project",
+        scope: "project",
+        installPlugin: options.installPlugin
+      });
+    case "install-skills":
+      return buildOperation("install", options, { target: "skills", scope: "local" });
+    case "sync-skills":
+      return buildOperation("sync", options, { target: "skills", scope: "local" });
+    case "remove-skills":
+      return buildOperation("remove", options, { target: "skills", scope: "local" });
+    case "list-skills":
+      return buildOperation("list", options, { target: "skills", scope: "project" });
+    case "search-skills": {
+      const query = options.positionals.join(" ").trim();
+      if (!query) {
+        throw new Error("`search-skills` requires a search query.");
+      }
+      return buildOperation("list", options, {
+        target: "skills",
+        scope: "project",
+        query
+      });
+    }
+    case "list-installed-skills":
+      return buildOperation("list", options, { target: "skills", scope: "local" });
+    case "setup-codex":
+      return buildOperation("setup-codex", options);
+    case "sync-codex":
+      return buildOperation("sync-codex", options);
+    case "status":
+      return buildOperation("status", options);
+    default:
+      throw new Error(`Unknown command: ${options.command}`);
+  }
+}
+
+function validateOperation(operation) {
+  const normalizedTarget = operation.target?.trim();
+  const normalizedScope = operation.scope?.trim() || "project";
+  const validTargets = new Set(["project", "plugin", "mcp", "skills"]);
+  const validScopes = new Set(["project", "local"]);
+
+  operation.target = normalizedTarget;
+  operation.scope = normalizedScope;
+
+  if (["install", "sync", "list", "remove"].includes(operation.action)) {
+    if (!operation.target || !validTargets.has(operation.target)) {
+      throw new Error("`--target` must be one of: project, plugin, skills.");
+    }
+    if (!validScopes.has(operation.scope)) {
+      throw new Error("`--scope` must be either `project` or `local`.");
+    }
+  }
+
+  if (operation.positionals.length > 0 && operation.action !== "list") {
+    throw new Error(`Unexpected positional arguments: ${operation.positionals.join(" ")}`);
+  }
+
+  if (
+    operation.action === "list" &&
+    operation.positionals.length > 0 &&
+    !operation.query
+  ) {
+    throw new Error("Use `--query <text>` with `list --target skills` instead of positional text.");
+  }
+
+  if (operation.target === "skills") {
+    if (operation.action === "remove" && operation.scope !== "local") {
+      throw new Error("`remove --target skills` currently supports only `--scope local`.");
+    }
+    if (operation.action === "list" && operation.scope === "local" && operation.query) {
+      throw new Error("`list --target skills --scope local` does not support `--query`.");
+    }
+    if (
+      ["install", "sync"].includes(operation.action) &&
+      operation.scope === "project" &&
+      operation.skills.length > 0
+    ) {
+      throw new Error(
+        `\`${operation.action} --target skills\` installs the full project skill bundle. Use \`--scope local --skills ...\` for targeted local skill installs.`
+      );
+    }
+  }
+
+  if ((operation.target === "plugin" || operation.target === "project") && operation.scope !== "project") {
+    throw new Error(`\`${operation.target}\` only supports \`--scope project\`.`);
+  }
+
+  if (operation.target === "project" && operation.query) {
+    throw new Error("`--query` is only supported with `list --target skills`.");
+  }
+
+  if (operation.target === "plugin" && operation.query) {
+    throw new Error("`--query` is only supported with `list --target skills`.");
+  }
+
+  if (operation.target === "mcp" && operation.query) {
+    throw new Error("`--query` is only supported with `list --target skills`.");
+  }
+
+  if (operation.action === "remove" && operation.target !== "skills") {
+    throw new Error("`remove` currently supports only `--target skills --scope local`.");
+  }
+
+  if (operation.action === "remove" && operation.target === "skills" && operation.skills.length === 0) {
+    throw new Error("`remove --target skills --scope local` requires `--skills <name[,name...]>`.");
+  }
+}
+
 async function getPackageVersion() {
   const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
   return packageJson.version;
+}
+
+function printCatalog(skills, installCommandPrefix) {
+  const grouped = groupSkillsByCategory(skills);
+
+  console.log(`Project scope: shipped Codex Kit skills: ${skills.length}`);
+  for (const group of grouped) {
+    console.log(`\n${group.category}`);
+    for (const skill of group.skills) {
+      console.log(`  - ${skill.name}: ${skill.summary}`);
+      console.log(`    install: ${installCommandPrefix} ${skill.name}`);
+    }
+  }
+}
+
+function printSearchResults(query, skills, installCommandPrefix) {
+  if (skills.length === 0) {
+    console.log(`No shipped skills matched "${query}".`);
+    return;
+  }
+
+  console.log(`Project scope: matches for "${query}": ${skills.length}`);
+  for (const skill of skills) {
+    console.log(`\n- ${skill.name} [${skill.category}]`);
+    console.log(`  ${skill.summary}`);
+    console.log(`  install: ${installCommandPrefix} ${skill.name}`);
+  }
 }
 
 export async function runCli(argv) {
@@ -132,169 +371,164 @@ export async function runCli(argv) {
     return;
   }
 
+  const operation = normalizeOperation(options);
+  validateOperation(operation);
+
   const version = await getPackageVersion();
   const templateRoot = path.resolve(__dirname, "../templates/project");
   const skillsRoot = path.resolve(templateRoot, ".agents/skills");
   const pluginRoot = path.resolve(__dirname, "../plugins/codex-kit");
+  const localInstallCommand = "codex-kit install --target skills --scope local --skills";
 
-  await mkdir(options.path, { recursive: true });
+  await mkdir(operation.path, { recursive: true });
 
-  if (options.command === "init") {
+  if (operation.action === "install" && operation.target === "project") {
     const result = await initProject({
-      targetDir: options.path,
+      targetDir: operation.path,
       templateRoot,
       pluginRoot,
       version,
-      installPlugin: options.installPlugin,
-      force: options.force,
-      dryRun: options.dryRun
+      installPlugin: operation.installPlugin,
+      force: operation.force,
+      dryRun: operation.dryRun
     });
-    if (!options.quiet) {
+    if (!operation.quiet) {
       console.log(
-        options.dryRun
-          ? `Planned ${result.written.length} file writes in ${options.path}`
-          : `Installed Codex Kit into ${options.path}`
+        operation.dryRun
+          ? `Project scope: planned ${result.written.length} file writes in ${operation.path}`
+          : `Project scope: installed Codex Kit scaffold into ${operation.path}`
       );
       if (result.skipped.length > 0) {
-        console.log(`Skipped ${result.skipped.length} existing files`);
+        console.log(`Project scope: skipped ${result.skipped.length} existing files`);
       }
       if (result.pluginInstalled) {
         console.log(
-          options.dryRun
-            ? "Planned Codex Kit plugin install for this workspace"
-            : "Installed Codex Kit plugin into this workspace"
+          operation.dryRun
+            ? "Project scope: planned Codex Kit workspace plugin install"
+            : "Project scope: installed Codex Kit workspace plugin"
         );
       }
     }
     return;
   }
 
-  if (options.command === "update") {
+  if (operation.action === "sync" && operation.target === "project") {
     const result = await updateProject({
-      targetDir: options.path,
+      targetDir: operation.path,
       templateRoot,
       pluginRoot,
       version,
-      installPlugin: options.installPlugin,
-      force: options.force,
-      dryRun: options.dryRun
+      installPlugin: operation.installPlugin,
+      force: operation.force,
+      dryRun: operation.dryRun
     });
-    if (!options.quiet) {
+    if (!operation.quiet) {
       console.log(
-        options.dryRun
-          ? `Planned ${result.written.length} file updates in ${options.path}`
-          : `Updated Codex Kit files in ${options.path}`
+        operation.dryRun
+          ? `Project scope: planned ${result.written.length} file updates in ${operation.path}`
+          : `Project scope: synced Codex Kit scaffold in ${operation.path}`
       );
       if (result.skipped.length > 0) {
-        console.log(`Skipped ${result.skipped.length} locally modified files`);
+        console.log(`Project scope: skipped ${result.skipped.length} locally modified files`);
       }
       if (result.pluginInstalled) {
         console.log(
-          options.dryRun
-            ? "Planned Codex Kit plugin sync for this workspace"
-            : "Synced Codex Kit plugin into this workspace"
+          operation.dryRun
+            ? "Project scope: planned Codex Kit workspace plugin sync"
+            : "Project scope: synced Codex Kit workspace plugin"
         );
       }
     }
     return;
   }
 
-  if (options.command === "setup-codex") {
-    const initResult = await initProject({
-      targetDir: options.path,
-      templateRoot,
+  if (operation.action === "install" && operation.target === "plugin") {
+    const result = await installWorkspacePlugin({
+      targetDir: operation.path,
       pluginRoot,
       version,
-      installPlugin: true,
-      force: options.force,
-      dryRun: options.dryRun
+      force: operation.force,
+      dryRun: operation.dryRun
     });
-    const skillsResult = await installLocalSkills({
-      skillsRoot,
-      codexHome: options.codexHome,
-      skills: options.skills,
-      force: options.force,
-      dryRun: options.dryRun
-    });
-
-    if (!options.quiet) {
+    if (!operation.quiet) {
       console.log(
-        options.dryRun
-          ? `Planned Codex setup for ${options.path}`
-          : `Completed Codex setup for ${options.path}`
+        operation.dryRun
+          ? `Project scope: planned ${result.written.length} workspace plugin file writes in ${operation.path}`
+          : `Project scope: installed Codex Kit workspace plugin into ${operation.path}`
       );
-      console.log(
-        options.dryRun
-          ? `Planned ${initResult.written.length} workspace file writes`
-          : `Workspace scaffold ready${initResult.pluginInstalled ? " with plugin support" : ""}`
-      );
-      console.log(
-        options.dryRun
-          ? `Planned ${skillsResult.written.length} local skill file writes in ${skillsResult.targetDir}`
-          : `Installed shipped skills into ${skillsResult.targetDir}`
-      );
-      console.log("\nNext steps:");
-      console.log(`  1. Open Codex in ${options.path}`);
-      console.log("  2. Open Plugins and choose `Codex Kit Local`.");
-      console.log("  3. Click `+` on `Codex Kit` to install the workspace plugin.");
-      console.log("  4. Start a new thread and use `@Codex Kit` or any installed local skills.");
-    }
-    return;
-  }
-
-  if (options.command === "sync-codex") {
-    const updateResult = await updateProject({
-      targetDir: options.path,
-      templateRoot,
-      pluginRoot,
-      version,
-      installPlugin: true,
-      force: options.force,
-      dryRun: options.dryRun
-    });
-    const skillsResult = await syncLocalSkills({
-      skillsRoot,
-      codexHome: options.codexHome,
-      skills: options.skills,
-      dryRun: options.dryRun
-    });
-
-    if (!options.quiet) {
-      console.log(
-        options.dryRun
-          ? `Planned Codex sync for ${options.path}`
-          : `Synced Codex setup for ${options.path}`
-      );
-      console.log(
-        options.dryRun
-          ? `Planned ${updateResult.written.length} workspace file updates`
-          : `Workspace scaffold and plugin synced`
-      );
-      console.log(
-        options.dryRun
-          ? `Planned ${skillsResult.written.length} local skill file syncs in ${skillsResult.targetDir}`
-          : `Local shipped skills synced into ${skillsResult.targetDir}`
-      );
-      if (updateResult.skipped.length > 0) {
-        console.log(`Skipped ${updateResult.skipped.length} locally modified workspace files`);
+      if (result.skipped.length > 0) {
+        console.log(`Project scope: skipped ${result.skipped.length} existing plugin files`);
       }
     }
     return;
   }
 
-  if (options.command === "status") {
-    const result = await statusProject({
-      targetDir: options.path,
-      templateRoot,
+  if (operation.action === "install" && operation.target === "mcp") {
+    const result = await installManagedMcp({
+      targetDir: operation.path,
+      scope: operation.scope,
+      codexHome: operation.codexHome,
+      dryRun: operation.dryRun
+    });
+    if (!operation.quiet) {
+      console.log(
+        operation.dryRun
+          ? `${operation.scope === "local" ? "Local" : "Project"} scope: planned MCP config update in ${result.configPath}`
+          : `${operation.scope === "local" ? "Local" : "Project"} scope: installed Codex Kit MCP bundle into ${result.configPath}`
+      );
+    }
+    return;
+  }
+
+  if (operation.action === "sync" && operation.target === "plugin") {
+    const result = await syncWorkspacePlugin({
+      targetDir: operation.path,
+      pluginRoot,
+      version,
+      force: operation.force,
+      dryRun: operation.dryRun
+    });
+    if (!operation.quiet) {
+      console.log(
+        operation.dryRun
+          ? `Project scope: planned ${result.written.length} workspace plugin file syncs in ${operation.path}`
+          : `Project scope: synced Codex Kit workspace plugin in ${operation.path}`
+      );
+      if (result.skipped.length > 0) {
+        console.log(`Project scope: skipped ${result.skipped.length} locally modified plugin files`);
+      }
+    }
+    return;
+  }
+
+  if (operation.action === "sync" && operation.target === "mcp") {
+    const result = await syncManagedMcp({
+      targetDir: operation.path,
+      scope: operation.scope,
+      codexHome: operation.codexHome,
+      dryRun: operation.dryRun
+    });
+    if (!operation.quiet) {
+      console.log(
+        operation.dryRun
+          ? `${operation.scope === "local" ? "Local" : "Project"} scope: planned MCP config sync in ${result.configPath}`
+          : `${operation.scope === "local" ? "Local" : "Project"} scope: synced Codex Kit MCP bundle in ${result.configPath}`
+      );
+    }
+    return;
+  }
+
+  if (operation.action === "list" && operation.target === "plugin") {
+    const result = await statusWorkspacePlugin({
+      targetDir: operation.path,
       pluginRoot,
       version
     });
-    console.log(`Version: ${result.version}`);
-    console.log(`Managed files: ${result.managedCount}`);
-    console.log(`Plugin installed: ${result.pluginInstalled ? "yes" : "no"}`);
-    console.log(`Missing files: ${result.missing.length}`);
-    console.log(`Modified files: ${result.modified.length}`);
-    console.log(`Outdated files: ${result.outdated.length}`);
+    console.log(`Project scope: workspace plugin installed: ${result.pluginInstalled ? "yes" : "no"}`);
+    console.log(`Project scope: tracked plugin files: ${result.managedCount}`);
+    console.log(`Project scope: missing plugin files: ${result.missing.length}`);
+    console.log(`Project scope: modified plugin files: ${result.modified.length}`);
+    console.log(`Project scope: outdated plugin files: ${result.outdated.length}`);
     if (result.missing.length > 0) {
       console.log("\nMissing:");
       for (const file of result.missing) {
@@ -316,52 +550,70 @@ export async function runCli(argv) {
     return;
   }
 
-  if (options.command === "list-skills") {
-    const skills = await getSelectedShippedSkills({ skillsRoot, skills: options.skills });
-    const grouped = groupSkillsByCategory(skills);
+  if (operation.action === "list" && operation.target === "mcp") {
+    const result = await statusManagedMcp({
+      targetDir: operation.path,
+      scope: operation.scope,
+      codexHome: operation.codexHome
+    });
+    console.log(`${operation.scope === "local" ? "Local" : "Project"} scope: MCP config path ${result.configPath}`);
+    console.log(`${operation.scope === "local" ? "Local" : "Project"} scope: shipped MCP bundle installed: ${result.installed ? "yes" : "no"}`);
+    console.log(`${operation.scope === "local" ? "Local" : "Project"} scope: shipped servers present: ${result.servers.length}/${result.expectedServers.length}`);
+    if (result.expectedServers.length > 0) {
+      console.log(`Expected servers: ${result.expectedServers.join(", ")}`);
+    }
+    if (result.servers.length > 0) {
+      console.log(`Installed servers: ${result.servers.join(", ")}`);
+    }
+    if (result.commentedServers?.length > 0) {
+      console.log(`Commented examples: ${result.commentedServers.join(", ")}`);
+    }
+    return;
+  }
 
-    console.log(`Shipped Codex Kit skills: ${skills.length}`);
-    for (const group of grouped) {
-      console.log(`\n${group.category}`);
-      for (const skill of group.skills) {
-        console.log(`  - ${skill.name}: ${skill.summary}`);
-        console.log(`    install: codex-kit install-skills --skills ${skill.name}`);
+  if (operation.action === "list" && operation.target === "skills" && operation.scope === "project") {
+    if (operation.query) {
+      const results = await searchShippedSkills({ skillsRoot, query: operation.query });
+      printSearchResults(operation.query, results, localInstallCommand);
+      return;
+    }
+
+    const skills = await getSelectedShippedSkills({ skillsRoot, skills: operation.skills });
+    printCatalog(skills, localInstallCommand);
+    return;
+  }
+
+  if (operation.action === "install" && operation.target === "skills" && operation.scope === "project") {
+    const result = await installProjectSkills({
+      targetDir: operation.path,
+      templateRoot,
+      version,
+      force: operation.force,
+      dryRun: operation.dryRun
+    });
+    if (!operation.quiet) {
+      console.log(
+        operation.dryRun
+          ? `Project scope: planned ${result.written.length} project skill file writes in ${operation.path}`
+          : `Project scope: installed Codex Kit project skills into ${operation.path}`
+      );
+      if (result.skipped.length > 0) {
+        console.log(`Project scope: skipped ${result.skipped.length} existing project skill files`);
       }
     }
     return;
   }
 
-  if (options.command === "search-skills") {
-    const query = options.positionals.join(" ").trim();
-    if (!query) {
-      throw new Error("`search-skills` requires a search query.");
-    }
-
-    const results = await searchShippedSkills({ skillsRoot, query });
-    if (results.length === 0) {
-      console.log(`No shipped skills matched "${query}".`);
-      return;
-    }
-
-    console.log(`Matches for "${query}": ${results.length}`);
-    for (const skill of results) {
-      console.log(`\n- ${skill.name} [${skill.category}]`);
-      console.log(`  ${skill.summary}`);
-      console.log(`  install: codex-kit install-skills --skills ${skill.name}`);
-    }
-    return;
-  }
-
-  if (options.command === "list-installed-skills") {
+  if (operation.action === "list" && operation.target === "skills" && operation.scope === "local") {
     const result = await listInstalledLocalSkills({
       skillsRoot,
-      codexHome: options.codexHome
+      codexHome: operation.codexHome
     });
     const grouped = groupSkillsByCategory(result.installed);
 
-    console.log(`Installed Codex Kit skills in ${result.targetRoot}: ${result.installed.length}`);
+    console.log(`Local scope: installed Codex Kit skills in ${result.targetRoot}: ${result.installed.length}`);
     if (result.installed.length === 0) {
-      console.log("No shipped Codex Kit skills are currently installed.");
+      console.log("Local scope: no shipped Codex Kit skills are currently installed.");
       return;
     }
 
@@ -373,76 +625,207 @@ export async function runCli(argv) {
     }
 
     if (result.missing.length > 0) {
-      console.log(`\nMissing from local Codex: ${result.missing.length}`);
-      console.log("  Run `codex-kit install-skills` to install the full shipped catalog.");
+      console.log(`\nLocal scope: missing shipped skills: ${result.missing.length}`);
+      console.log("  Run `codex-kit install --target skills --scope local` to install the full shipped catalog.");
     }
     return;
   }
 
-  if (options.command === "install-skills") {
+  if (operation.action === "sync" && operation.target === "skills" && operation.scope === "project") {
+    const result = await syncProjectSkills({
+      targetDir: operation.path,
+      templateRoot,
+      version,
+      force: operation.force,
+      dryRun: operation.dryRun
+    });
+    if (!operation.quiet) {
+      console.log(
+        operation.dryRun
+          ? `Project scope: planned ${result.written.length} project skill file syncs in ${operation.path}`
+          : `Project scope: synced Codex Kit project skills in ${operation.path}`
+      );
+      if (result.skipped.length > 0) {
+        console.log(`Project scope: skipped ${result.skipped.length} locally modified project skill files`);
+      }
+    }
+    return;
+  }
+
+  if (operation.action === "install" && operation.target === "skills") {
     const result = await installLocalSkills({
       skillsRoot,
-      codexHome: options.codexHome,
-      skills: options.skills,
-      force: options.force,
-      dryRun: options.dryRun
+      codexHome: operation.codexHome,
+      skills: operation.skills,
+      force: operation.force,
+      dryRun: operation.dryRun
     });
-    if (!options.quiet) {
+    if (!operation.quiet) {
       console.log(
-        options.dryRun
-          ? `Planned ${result.written.length} local skill file writes in ${result.targetDir}`
-          : `Installed Codex Kit skills into ${result.targetDir}`
+        operation.dryRun
+          ? `Local scope: planned ${result.written.length} skill file writes in ${result.targetDir}`
+          : `Local scope: installed Codex Kit skills into ${result.targetDir}`
       );
       if (result.skipped.length > 0) {
-        console.log(`Skipped ${result.skipped.length} existing local skill files`);
+        console.log(`Local scope: skipped ${result.skipped.length} existing skill files`);
       }
     }
     return;
   }
 
-  if (options.command === "sync-skills") {
+  if (operation.action === "sync" && operation.target === "skills") {
     const result = await syncLocalSkills({
       skillsRoot,
-      codexHome: options.codexHome,
-      skills: options.skills,
-      dryRun: options.dryRun
+      codexHome: operation.codexHome,
+      skills: operation.skills,
+      dryRun: operation.dryRun
     });
-    if (!options.quiet) {
+    if (!operation.quiet) {
       console.log(
-        options.dryRun
-          ? `Planned ${result.written.length} local skill file syncs in ${result.targetDir}`
-          : `Synced Codex Kit skills into ${result.targetDir}`
+        operation.dryRun
+          ? `Local scope: planned ${result.written.length} skill file syncs in ${result.targetDir}`
+          : `Local scope: synced Codex Kit skills into ${result.targetDir}`
       );
-      if (result.skipped.length > 0) {
-        console.log(`Skipped ${result.skipped.length} local skill files`);
-      }
     }
     return;
   }
 
-  if (options.command === "remove-skills") {
-    if (options.skills.length === 0) {
-      throw new Error("`remove-skills` requires `--skills <name[,name...]>`.");
-    }
-
+  if (operation.action === "remove" && operation.target === "skills") {
     const result = await removeLocalSkills({
       skillsRoot,
-      codexHome: options.codexHome,
-      skills: options.skills,
-      dryRun: options.dryRun
+      codexHome: operation.codexHome,
+      skills: operation.skills,
+      dryRun: operation.dryRun
     });
-    if (!options.quiet) {
+    if (!operation.quiet) {
       console.log(
-        options.dryRun
-          ? `Planned removal of ${result.removed.length} skills from ${result.targetDir}`
-          : `Removed ${result.removed.length} skills from ${result.targetDir}`
+        operation.dryRun
+          ? `Local scope: planned removal of ${result.removed.length} skills from ${result.targetDir}`
+          : `Local scope: removed ${result.removed.length} skills from ${result.targetDir}`
       );
       if (result.skipped.length > 0) {
-        console.log(`Skipped ${result.skipped.length} missing skills`);
+        console.log(`Local scope: skipped ${result.skipped.length} missing skills`);
       }
     }
     return;
   }
 
-  throw new Error(`Unknown command: ${options.command}`);
+  if (operation.action === "setup-codex") {
+    const initResult = await initProject({
+      targetDir: operation.path,
+      templateRoot,
+      pluginRoot,
+      version,
+      installPlugin: true,
+      force: operation.force,
+      dryRun: operation.dryRun
+    });
+    const skillsResult = await installLocalSkills({
+      skillsRoot,
+      codexHome: operation.codexHome,
+      skills: operation.skills,
+      force: operation.force,
+      dryRun: operation.dryRun
+    });
+
+    if (!operation.quiet) {
+      console.log(
+        operation.dryRun
+          ? `Planned Codex setup for ${operation.path}`
+          : `Completed Codex setup for ${operation.path}`
+      );
+      console.log(
+        operation.dryRun
+          ? `Project scope: planned ${initResult.written.length} workspace file writes`
+          : `Project scope: scaffold ready with workspace plugin support`
+      );
+      console.log(
+        operation.dryRun
+          ? `Local scope: planned ${skillsResult.written.length} skill file writes in ${skillsResult.targetDir}`
+          : `Local scope: installed shipped skills into ${skillsResult.targetDir}`
+      );
+      console.log("\nNext steps:");
+      console.log(`  1. Open Codex in ${operation.path}`);
+      console.log("  2. Open Plugins and choose `Codex Kit Local`.");
+      console.log("  3. Click `+` on `Codex Kit` to install the workspace plugin.");
+      console.log("  4. Start a new thread and use `@Codex Kit` or any installed local skills.");
+    }
+    return;
+  }
+
+  if (operation.action === "sync-codex") {
+    const updateResult = await updateProject({
+      targetDir: operation.path,
+      templateRoot,
+      pluginRoot,
+      version,
+      installPlugin: true,
+      force: operation.force,
+      dryRun: operation.dryRun
+    });
+    const skillsResult = await syncLocalSkills({
+      skillsRoot,
+      codexHome: operation.codexHome,
+      skills: operation.skills,
+      dryRun: operation.dryRun
+    });
+
+    if (!operation.quiet) {
+      console.log(
+        operation.dryRun
+          ? `Planned Codex sync for ${operation.path}`
+          : `Synced Codex setup for ${operation.path}`
+      );
+      console.log(
+        operation.dryRun
+          ? `Project scope: planned ${updateResult.written.length} workspace file updates`
+          : "Project scope: scaffold and workspace plugin synced"
+      );
+      console.log(
+        operation.dryRun
+          ? `Local scope: planned ${skillsResult.written.length} skill file syncs in ${skillsResult.targetDir}`
+          : `Local scope: shipped skills synced into ${skillsResult.targetDir}`
+      );
+      if (updateResult.skipped.length > 0) {
+        console.log(`Project scope: skipped ${updateResult.skipped.length} locally modified workspace files`);
+      }
+    }
+    return;
+  }
+
+  if (operation.action === "status") {
+    const result = await statusProject({
+      targetDir: operation.path,
+      templateRoot,
+      pluginRoot,
+      version
+    });
+    console.log(`Project scope: version ${result.version}`);
+    console.log(`Project scope: managed files ${result.managedCount}`);
+    console.log(`Project scope: workspace plugin installed ${result.pluginInstalled ? "yes" : "no"}`);
+    console.log(`Project scope: missing files ${result.missing.length}`);
+    console.log(`Project scope: modified files ${result.modified.length}`);
+    console.log(`Project scope: outdated files ${result.outdated.length}`);
+    if (result.missing.length > 0) {
+      console.log("\nMissing:");
+      for (const file of result.missing) {
+        console.log(`  - ${file}`);
+      }
+    }
+    if (result.modified.length > 0) {
+      console.log("\nModified:");
+      for (const file of result.modified) {
+        console.log(`  - ${file}`);
+      }
+    }
+    if (result.outdated.length > 0) {
+      console.log("\nOutdated:");
+      for (const file of result.outdated) {
+        console.log(`  - ${file}`);
+      }
+    }
+    return;
+  }
+
+  throw new Error(`Unknown command: ${operation.action}`);
 }

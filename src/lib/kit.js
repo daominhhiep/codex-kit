@@ -13,6 +13,8 @@ const PLUGIN_NAME = "codex-kit";
 const PLUGIN_TARGET_ROOT = ".agents/plugins/codex-kit";
 const MARKETPLACE_PATH = ".agents/plugins/marketplace.json";
 const LOCAL_SKILLS_TARGET_ROOT = "skills";
+const PROJECT_SKILLS_TARGET_ROOT = ".agents/skills";
+const PROJECT_SHARED_TARGET_ROOT = ".agents/.shared";
 
 function buildManifest(version, files, features = {}) {
   return {
@@ -56,6 +58,96 @@ async function loadManagedTemplates({ templateRoot, pluginRoot, includePlugin = 
       }))
     )
     .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+}
+
+async function loadPluginTemplates(pluginRoot) {
+  const pluginTemplates = await loadTemplateFiles(pluginRoot);
+  return pluginTemplates
+    .map((template) => ({
+      ...template,
+      relativePath: normalizePath(path.join(PLUGIN_TARGET_ROOT, template.relativePath))
+    }))
+    .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+}
+
+async function loadProjectSkillsTemplates(templateRoot) {
+  const templates = await loadTemplateFiles(templateRoot);
+  return templates
+    .filter(
+      (template) =>
+        normalizePath(template.relativePath).startsWith(`${PROJECT_SKILLS_TARGET_ROOT}/`) ||
+        normalizePath(template.relativePath).startsWith(`${PROJECT_SHARED_TARGET_ROOT}/`)
+    )
+    .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+}
+
+function mergeManifestFeatures(existingManifest, featurePatch = {}) {
+  return {
+    ...(existingManifest?.features || {}),
+    ...featurePatch
+  };
+}
+
+async function writeProjectSubset({
+  targetDir,
+  templates,
+  version,
+  existingManifest,
+  featurePatch = {},
+  replacePaths = [],
+  force = false,
+  dryRun = false,
+  syncMode = false
+}) {
+  const manifestByPath = new Map((existingManifest?.files || []).map((file) => [file.path, file]));
+  const replaceSet = new Set(replacePaths);
+  const nextManifestFiles = (existingManifest?.files || []).filter((file) => !replaceSet.has(file.path));
+  const written = [];
+  const skipped = [];
+
+  for (const template of templates) {
+    const relativePath = normalizePath(template.relativePath);
+    const destination = path.join(targetDir, template.relativePath);
+    const currentHash = await getCurrentHash(destination);
+    const previous = manifestByPath.get(relativePath);
+    const exists = currentHash !== null;
+    const isLocallyModified =
+      syncMode &&
+      currentHash !== null &&
+      previous &&
+      previous.installedHash &&
+      currentHash !== previous.installedHash;
+
+    if ((exists && !syncMode && !force) || (isLocallyModified && !force)) {
+      skipped.push(relativePath);
+      nextManifestFiles.push({
+        path: relativePath,
+        templateHash: template.templateHash,
+        installedHash: currentHash || previous?.installedHash || template.templateHash
+      });
+      continue;
+    }
+
+    if (!dryRun) {
+      await writeText(destination, template.content);
+    }
+
+    written.push(relativePath);
+    nextManifestFiles.push({
+      path: relativePath,
+      templateHash: template.templateHash,
+      installedHash: template.templateHash
+    });
+  }
+
+  if (!dryRun) {
+    await writeManifest(
+      targetDir,
+      buildManifest(version, nextManifestFiles, mergeManifestFeatures(existingManifest, featurePatch))
+    );
+  }
+
+  return { written, skipped };
 }
 
 async function ensurePluginMarketplace({ targetDir, dryRun = false }) {
@@ -261,6 +353,33 @@ export async function initProject({
   return { written, skipped, pluginInstalled: installPlugin };
 }
 
+export async function installWorkspacePlugin({
+  targetDir,
+  pluginRoot,
+  version,
+  force = false,
+  dryRun = false
+}) {
+  const existingManifest = await readManifest(targetDir);
+  const templates = await loadPluginTemplates(pluginRoot);
+  const replacePaths = templates.map((template) => normalizePath(template.relativePath));
+  const result = await writeProjectSubset({
+    targetDir,
+    templates,
+    version,
+    existingManifest,
+    featurePatch: { installPlugin: true },
+    replacePaths,
+    force,
+    dryRun,
+    syncMode: false
+  });
+
+  await ensurePluginMarketplace({ targetDir, dryRun });
+
+  return { ...result, pluginInstalled: true };
+}
+
 export async function updateProject({
   targetDir,
   templateRoot,
@@ -333,6 +452,79 @@ export async function updateProject({
   return { written, skipped, pluginInstalled: includePlugin };
 }
 
+export async function syncWorkspacePlugin({
+  targetDir,
+  pluginRoot,
+  version,
+  force = false,
+  dryRun = false
+}) {
+  const existingManifest = await readManifest(targetDir);
+  const templates = await loadPluginTemplates(pluginRoot);
+  const replacePaths = templates.map((template) => normalizePath(template.relativePath));
+  const result = await writeProjectSubset({
+    targetDir,
+    templates,
+    version,
+    existingManifest,
+    featurePatch: { installPlugin: true },
+    replacePaths,
+    force,
+    dryRun,
+    syncMode: true
+  });
+
+  await ensurePluginMarketplace({ targetDir, dryRun });
+
+  return { ...result, pluginInstalled: true };
+}
+
+export async function installProjectSkills({
+  targetDir,
+  templateRoot,
+  version,
+  force = false,
+  dryRun = false
+}) {
+  const existingManifest = await readManifest(targetDir);
+  const templates = await loadProjectSkillsTemplates(templateRoot);
+  const replacePaths = templates.map((template) => normalizePath(template.relativePath));
+
+  return writeProjectSubset({
+    targetDir,
+    templates,
+    version,
+    existingManifest,
+    replacePaths,
+    force,
+    dryRun,
+    syncMode: false
+  });
+}
+
+export async function syncProjectSkills({
+  targetDir,
+  templateRoot,
+  version,
+  force = false,
+  dryRun = false
+}) {
+  const existingManifest = await readManifest(targetDir);
+  const templates = await loadProjectSkillsTemplates(templateRoot);
+  const replacePaths = templates.map((template) => normalizePath(template.relativePath));
+
+  return writeProjectSubset({
+    targetDir,
+    templates,
+    version,
+    existingManifest,
+    replacePaths,
+    force,
+    dryRun,
+    syncMode: true
+  });
+}
+
 export async function statusProject({ targetDir, templateRoot, pluginRoot, version }) {
   const manifest = await readManifest(targetDir);
   const templates = await loadManagedTemplates({
@@ -379,6 +571,59 @@ export async function statusProject({ targetDir, templateRoot, pluginRoot, versi
     version: manifest.version || version,
     managedCount: manifest.files.length,
     pluginInstalled: hasPluginFeature(manifest),
+    missing,
+    modified,
+    outdated
+  };
+}
+
+export async function statusWorkspacePlugin({ targetDir, pluginRoot, version }) {
+  const manifest = await readManifest(targetDir);
+  const templates = await loadPluginTemplates(pluginRoot);
+  const templateByPath = new Map(
+    templates.map((template) => [normalizePath(template.relativePath), template])
+  );
+
+  if (!manifest || !hasPluginFeature(manifest)) {
+    return {
+      version: manifest?.version || version,
+      managedCount: templates.length,
+      pluginInstalled: false,
+      missing: templates.map((template) => normalizePath(template.relativePath)),
+      modified: [],
+      outdated: []
+    };
+  }
+
+  const pluginFiles = manifest.files.filter((file) =>
+    file.path.startsWith(`${PLUGIN_TARGET_ROOT}/`)
+  );
+  const missing = [];
+  const modified = [];
+  const outdated = [];
+
+  for (const template of templates) {
+    const relativePath = normalizePath(template.relativePath);
+    const tracked = pluginFiles.find((file) => file.path === relativePath);
+    const destination = path.join(targetDir, relativePath);
+    const currentHash = await getCurrentHash(destination);
+
+    if (!tracked || currentHash === null) {
+      missing.push(relativePath);
+      continue;
+    }
+    if (tracked.installedHash && currentHash !== tracked.installedHash) {
+      modified.push(relativePath);
+    }
+    if (templateByPath.has(relativePath) && tracked.templateHash !== template.templateHash) {
+      outdated.push(relativePath);
+    }
+  }
+
+  return {
+    version: manifest.version || version,
+    managedCount: pluginFiles.length,
+    pluginInstalled: true,
     missing,
     modified,
     outdated
